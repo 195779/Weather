@@ -3,7 +3,14 @@
   <component name="DesignSurface">
     <option name="filePathToZoomLevelMap">
       <map>
+        <entry key="..\:/CODING__ALAN_CF/AS_Explore/Weather/app/src/main/res/layout/activity_weather.xml" value="0.21739130434782608" />
+        <entry key="..\:/CODING__ALAN_CF/AS_Explore/Weather/app/src/main/res/layout/aqi.xml" value="0.21739130434782608" />
         <entry key="..\:/CODING__ALAN_CF/AS_Explore/Weather/app/src/main/res/layout/choose_area.xml" value="0.264" />
+        <entry key="..\:/CODING__ALAN_CF/AS_Explore/Weather/app/src/main/res/layout/forecast.xml" value="0.21739130434782608" />
+        <entry key="..\:/CODING__ALAN_CF/AS_Explore/Weather/app/src/main/res/layout/forecast_item.xml" value="0.21739130434782608" />
+        <entry key="..\:/CODING__ALAN_CF/AS_Explore/Weather/app/src/main/res/layout/now.xml" value="0.21739130434782608" />
+        <entry key="..\:/CODING__ALAN_CF/AS_Explore/Weather/app/src/main/res/layout/suggestion.xml" value="0.21739130434782608" />
+        <entry key="..\:/CODING__ALAN_CF/AS_Explore/Weather/app/src/main/res/layout/title.xml" value="0.1" />
       </map>
     </option>
   </component>

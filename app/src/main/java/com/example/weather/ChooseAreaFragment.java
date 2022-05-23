@@ -3,12 +3,12 @@ package com.example.weather;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -17,13 +17,19 @@ import android.widget.Toast;
 import com.example.weather.db.Province;
 import com.example.weather.db.City;
 import com.example.weather.db.County;
+import com.example.weather.db.Weather;
 import com.example.weather.util.HttpUtil;
 import com.example.weather.util.Utility;
+import com.qweather.sdk.bean.base.Lang;
+import com.qweather.sdk.bean.base.Range;
+import com.qweather.sdk.bean.base.Unit;
+import com.qweather.sdk.bean.geo.GeoBean;
+import com.qweather.sdk.bean.weather.WeatherDailyBean;
+import com.qweather.sdk.view.QWeather;
 
 import androidx.fragment.app.Fragment;
 
 import org.litepal.LitePal;
-import org.litepal.crud.LitePalSupport;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -100,8 +106,36 @@ public class ChooseAreaFragment extends Fragment {
                     selectedCity = cityList.get(position);
                     queryCounties();
                 } else if (currentLevel == LEVEL_COUNTY) {
-                    /*String weatherId = countyList.get(position).getWeatherId();
-                    if (getActivity() instanceof MainActivity) {
+
+                    String weatherId = countyList.get(position).getWeatherId();
+
+                    /*QWeather.getWeather7D(getActivity(), weatherId, Lang.ZH_HANS, Unit.METRIC, new QWeather.OnResultWeatherDailyListener() {
+                        @Override
+                        public void onError(Throwable throwable) {
+                            Log.e("onError",throwable.toString());
+                            throwable.printStackTrace();
+                        }
+
+                        @Override
+                        public void onSuccess(WeatherDailyBean weatherDailyBean) {
+                            List<WeatherDailyBean.DailyBean> dailyBeanList = weatherDailyBean.getDaily();
+                            for(int i=0;i<dailyBeanList.size();i++){
+                                Weather weather = new Weather();
+                                weather.setWeatherId(weatherId);
+                                weather.setCountyName(countyList.get(position).getCountyName());
+                                weather.setUpdateTime(weatherDailyBean.getBasic().getUpdateTime());
+                                weather.setDate(dailyBeanList.get(i).getFxDate());
+                                weather.saveOrUpdate("weatherid = ? && date = ?",weatherId,dailyBeanList.get(i).getFxDate());
+                            }
+                        }
+                    });*/
+
+
+                    //更新weather数据
+                    Intent intent = new Intent(getActivity(), WeatherActivity.class);
+                    intent.putExtra("weatherId",weatherId);
+                    startActivity(intent);
+                    /*if (getActivity() instanceof MainActivity) {
                         Intent intent = new Intent(getActivity(), WeatherActivity.class);
                         intent.putExtra("weather_id", weatherId);
                         startActivity(intent);
@@ -113,6 +147,10 @@ public class ChooseAreaFragment extends Fragment {
                         activity.requestWeather(weatherId);
                     }*/
                 }
+
+
+                //检验能否查询出天气数据
+                //getWether();
             }
         });
         backButton.setOnClickListener(new View.OnClickListener() {
@@ -218,7 +256,7 @@ public class ChooseAreaFragment extends Fragment {
                     result = Utility.handleCityResponse(responseText, selectedProvince.getId());
                     //存入City表
                 } else if ("county".equals(type)) {
-                    result = Utility.handleCountyResponse(responseText, selectedCity.getId());
+                    result = Utility.handleCountyResponse(responseText, selectedCity.getId(),selectedCity.getCityName(),selectedProvince.getProvinceName(),getActivity());
                     //存入County表
                 }
                 if (result) {
@@ -273,5 +311,44 @@ public class ChooseAreaFragment extends Fragment {
         if (progressDialog != null) {
             progressDialog.dismiss();
         }
+    }
+
+
+    private void getWether() {
+        QWeather.getWeather15D(getActivity(), "101010100", Lang.ZH_HANS, Unit.METRIC, new QWeather.OnResultWeatherDailyListener() {
+            @Override
+            public void onError(Throwable throwable) {
+                Log.e("onError", "onError: ", throwable);
+            }
+
+            @Override
+            public void onSuccess(WeatherDailyBean weatherDailyBean) {
+                List<WeatherDailyBean.DailyBean> dailyBean = weatherDailyBean.getDaily();
+                Toast.makeText(getActivity(),"the size is " + dailyBean.size(),Toast.LENGTH_SHORT).show();
+                String test_weather = "";
+                for(int i=0; i<dailyBean.size();i++){
+                    test_weather += "The weather is " + dailyBean.get(i).getTextDay();
+                }
+                Toast.makeText(getActivity(), test_weather, Toast.LENGTH_SHORT).show();
+            }
+        });
+        QWeather.getGeoCityLookup(getActivity(), "青秀", Range.CN, 20, Lang.ZH_HANS, new QWeather.OnResultGeoListener() {
+            @Override
+            public void onError(Throwable throwable) {
+                Log.e("onERROR: ", throwable.toString());
+            }
+
+            @Override
+            public void onSuccess(GeoBean geoBean) {
+                List<GeoBean.LocationBean> locationBeanList = geoBean.getLocationBean();
+                Toast.makeText(getActivity(),"the size is "+locationBeanList.size(),Toast.LENGTH_SHORT).show();
+                for(int i = 0; i < locationBeanList.size(); i++){
+                    Toast.makeText(getActivity(),"the location id is " + locationBeanList.get(i).getId(),Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getActivity(),"所属省份："+locationBeanList.get(i).getAdm1()+" 所属城市："+locationBeanList.get(i).getAdm2(),Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getActivity(),"the location name is " + locationBeanList.get(i).getName(),Toast.LENGTH_SHORT).show();
+                }
+            }
+        }
+        );
     }
 }
