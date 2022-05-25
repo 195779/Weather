@@ -1,13 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout
+<LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="vertical"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="wrap_content"
+    android:layout_margin="15dp"
+    tools:ignore="MissingDefaultResource">
 
-    <fragment
-        android:id="@+id/choose_area_fragment"
-        android:name="com.example.weather.ChooseAreaFragment"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+    <ImageView
+        android:layout_gravity="center"
+        android:layout_marginTop="150dp"
+        android:layout_width="150dp"
+        android:layout_height="360dp"
+        android:id="@+id/image_view"
+        android:src="@drawable/img"/>
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="XX天气"
+        android:layout_gravity="center"
+        android:textSize="40dp"/>
 
-</FrameLayout>
+</LinearLayout>

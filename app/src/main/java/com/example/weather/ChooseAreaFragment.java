@@ -132,7 +132,7 @@ public class ChooseAreaFragment extends Fragment {
 
 
                     //更新weather数据
-                    Intent intent = new Intent(getActivity(), WeatherActivity.class);
+                    Intent intent = new Intent(getActivity(), WeatherActivity.class).setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
                     intent.putExtra("weatherId",weatherId);
                     startActivity(intent);
                     /*if (getActivity() instanceof MainActivity) {
