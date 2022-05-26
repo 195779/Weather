@@ -4,15 +4,14 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Typeface;
 import android.media.Image;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Handler;
 import android.preference.PreferenceManager;
+import android.provider.ContactsContract;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -20,26 +19,19 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.RelativeLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import com.baidu.location.BDAbstractLocationListener;
 import com.baidu.location.BDLocation;
 import com.baidu.location.BDLocationListener;
 import com.baidu.location.LocationClient;
 import com.baidu.location.LocationClientOption;
 import com.bumptech.glide.Glide;
-import com.bumptech.glide.RequestBuilder;
-import com.bumptech.glide.load.resource.bitmap.CenterCrop;
 import com.bumptech.glide.request.BaseRequestOptions;
 import com.bumptech.glide.request.RequestOptions;
-import com.example.weather.db.City;
-import com.example.weather.db.County;
-import com.example.weather.db.Weather;
 import com.example.weather.util.HttpUtil;
 import com.qweather.sdk.bean.IndicesBean;
+import com.qweather.sdk.bean.WarningBean;
 import com.qweather.sdk.bean.air.AirNowBean;
 import com.qweather.sdk.bean.base.IndicesType;
 import com.qweather.sdk.bean.base.Lang;
@@ -48,13 +40,9 @@ import com.qweather.sdk.bean.base.Unit;
 import com.qweather.sdk.bean.geo.GeoBean;
 import com.qweather.sdk.bean.weather.WeatherDailyBean;
 import com.qweather.sdk.bean.weather.WeatherNowBean;
-import com.qweather.sdk.view.HeConfig;
 import com.qweather.sdk.view.QWeather;
 
-import org.litepal.LitePal;
-
 import java.io.IOException;
-import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -97,6 +85,12 @@ public class WeatherActivity extends AppCompatActivity {
 
     private ImageView bingPicImg;
 
+    private ImageView Now_weather_image;
+
+    private TextView Warnning_text;
+
+    private LinearLayout Home_layout;
+
     public WeatherActivity() {
     }
 
@@ -122,12 +116,17 @@ public class WeatherActivity extends AppCompatActivity {
         swipeRefresh.setColorSchemeResources(R.color.colorPrimary);
         drawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
         navButton = (Button) findViewById(R.id.nav_button);
+        Now_weather_image = (ImageView) findViewById(R.id.Now_weather_image);
+        Warnning_text = (TextView) findViewById(R.id.Warnning_text);
+        Home_layout = (LinearLayout) findViewById(R.id.Home_layout);
+
 
         ImageView title_image = (ImageView) findViewById(R.id.title_image);
         ImageView forecast_image = (ImageView) findViewById(R.id.forecast_image);
         ImageView now_image = (ImageView) findViewById(R.id.now_image);
         ImageView aqi_image = (ImageView) findViewById(R.id.aqi_image);
         ImageView suggestion = (ImageView)findViewById(R.id.suggestion_image);
+        //图像模糊化处理Glide
         BaseRequestOptions optionsBlur = new RequestOptions().transform(new BlurTransformation(5, 35));
         Glide.with(this).load(getDrawable(R.drawable.ic_home))
                 .apply(optionsBlur)
@@ -145,6 +144,7 @@ public class WeatherActivity extends AppCompatActivity {
                 .apply(optionsBlur)
                 .into(aqi_image);
 
+        //显示天气信息
         show_Weather_List(getIntent());
 
         titleCity.setOnClickListener(new View.OnClickListener() {
@@ -207,16 +207,20 @@ public class WeatherActivity extends AppCompatActivity {
                                     List<GeoBean.LocationBean> locationBeanList = geoBean.getLocationBean();
                                     if (locationBeanList.size() == 1) {
                                         String weatherId = locationBeanList.get(0).getId();
-                                        Intent intent = new Intent(WeatherActivity.this, WeatherActivity.class).setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+                                        Intent intent = new Intent();
+                                        //Intent intent = new Intent(WeatherActivity.this, WeatherActivity.class).setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
                                         intent.putExtra("weatherId", weatherId);
-                                        startActivity(intent);
+                                        show_Weather_List(intent);
+                                        //startActivity(intent);
                                     } else {
                                         for (int i = 0; i < locationBeanList.size(); i++) {
                                             if (bdLocation.getCity().equals(locationBeanList.get(i).getAdm2())) {
                                                 String weatherId = locationBeanList.get(i).getId();
-                                                Intent intent = new Intent(WeatherActivity.this, WeatherActivity.class).setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+                                                Intent intent = new Intent();
+                                                //Intent intent = new Intent(WeatherActivity.this, WeatherActivity.class).setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
                                                 intent.putExtra("weatherId", weatherId);
-                                                startActivity(intent);
+                                                show_Weather_List(intent);
+                                                //startActivity(intent);
                                             }
                                         }
                                     }
@@ -224,7 +228,10 @@ public class WeatherActivity extends AppCompatActivity {
                             });
                         }
                     });
-                    locationClient.start();
+                    if(!locationClient.isStarted())
+                    {
+                        locationClient.start();
+                    }
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -233,6 +240,7 @@ public class WeatherActivity extends AppCompatActivity {
     }
 
 
+    //显示天气信息
     public void show_Weather_List(Intent intent){
         String mWeatherId = intent.getStringExtra("weatherId");
         QWeather.getGeoCityLookup(this, mWeatherId, Range.CN, 20, Lang.ZH_HANS, new QWeather.OnResultGeoListener() {
@@ -259,11 +267,78 @@ public class WeatherActivity extends AppCompatActivity {
             @Override
             public void onSuccess(WeatherNowBean weatherNowBean) {
                 titleUpdateTime.setText(weatherNowBean.getBasic().getUpdateTime());
-                degreeText.setText(weatherNowBean.getNow().getTemp() + "'C");
-                weatherInfoText.setText(weatherNowBean.getNow().getText());
+                degreeText.setText(weatherNowBean.getNow().getTemp() + "℃");
+                switch (weatherNowBean.getNow().getText()){
+                    case "多云": {
+                        Now_weather_image.setBackground(getResources().getDrawable(R.drawable.now_weather_image_cloudy));
+                        break;
+                    }
+                    case "晴": {
+                        Now_weather_image.setBackground(getResources().getDrawable(R.drawable.now_weather_image_sun));
+                        break;
+                    }
+                    case "阴": {
+                        Now_weather_image.setBackground(getResources().getDrawable(R.drawable.now_weather_image_overcast));
+                        break;
+                    }
+                    case "阵雨": {
+                        Now_weather_image.setBackground(getResources().getDrawable(R.drawable.now_weather_image_showerrain));
+                        break;
+                    }
+                    case "雷阵雨" :{
+                        Now_weather_image.setBackground(getResources().getDrawable(R.drawable.now_weather_image_thundershower));
+                        break;
+                    }
+                    case "小雨":{
+                        Now_weather_image.setBackground(getResources().getDrawable(R.drawable.now_weather_image_ligthrain));
+                        break;
+                    }
+                    case "中雨":{
+                        Now_weather_image.setBackground(getResources().getDrawable(R.drawable.now_weather_image_moderaterain));
+                        break;
+                    }
+                    case "大雨":{
+                        Now_weather_image.setBackground(getResources().getDrawable(R.drawable.now_weather_image_heavyrain));
+                        break;
+                    }
+                    case "暴雨":{
+                        Now_weather_image.setBackground(getResources().getDrawable(R.drawable.now_weather_image_stormrian));
+                        break;
+                    }
+                    case "大暴雨":{
+                        Now_weather_image.setBackground(getResources().getDrawable(R.drawable.now_weather_image_heavystorm));
+                        break;
+                    }
+                    case "雨夹雪":{
+                        Now_weather_image.setBackground(getResources().getDrawable(R.drawable.now_weather_image_snow_rain));
+                        break;
+                    }
+                    case "晴间多云":{
+                        Now_weather_image.setBackground(getResources().getDrawable(R.drawable.now_weather_image_sun_cloud));
+                        break;
+                    }
+                    case "小雪": {
+                        Now_weather_image.setBackground(getResources().getDrawable(R.drawable.now_weather_image_ligthsnow));
+                        break;
+                    }
+                    case "中雪":{
+                        Now_weather_image.setBackground(getResources().getDrawable(R.drawable.now_weather_image_moderatesnow));
+                        break;
+                    }
+                    case "大雪" :{
+                        Now_weather_image.setBackground(getResources().getDrawable(R.drawable.now_weather_image_heavysnow));
+                        break;
+                    }
+                    case "暴雪" :{
+                        Now_weather_image.setBackground(getResources().getDrawable(R.drawable.now_weather_image_snowstorm));
+                        break;
+                    }
+                    default:break;
+                }
+                weatherInfoText.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
+                weatherInfoText.setText(weatherNowBean.getNow().getText() + " ¦ " + weatherNowBean.getNow().getWindDir()+ weatherNowBean.getNow().getWindScale() + "级" + " ¦ " + "相对湿度：" + weatherNowBean.getNow().getHumidity() + " ¦ " + "体感：" +weatherNowBean.getNow().getFeelsLike() + "℃");
             }
         });
-        //forecastLayout.removeAllViews();
         QWeather.getWeather7D(this, mWeatherId, Lang.ZH_HANS, Unit.METRIC, new QWeather.OnResultWeatherDailyListener() {
             @Override
             public void onError(Throwable throwable) {
@@ -280,14 +355,150 @@ public class WeatherActivity extends AppCompatActivity {
                     TextView infoText = (TextView) view.findViewById(R.id.info_text);
                     TextView maxText = (TextView) view.findViewById(R.id.max_text);
                     TextView minText = (TextView) view.findViewById(R.id.min_text);
+                    ImageView imageView_forecast = (ImageView)view.findViewById(R.id.image_view_forecast_item);
+                    switch (dailyBeanList.get(i).getTextDay()){
+                        case "多云": {
+                            imageView_forecast.setBackground(getResources().getDrawable(R.drawable.now_weather_image_cloudy));
+                            break;
+                        }
+                        case "晴": {
+                            imageView_forecast.setBackground(getResources().getDrawable(R.drawable.now_weather_image_sun));
+                            break;
+                        }
+                        case "阴": {
+                            imageView_forecast.setBackground(getResources().getDrawable(R.drawable.now_weather_image_overcast));
+                            break;
+                        }
+                        case "阵雨": {
+                            imageView_forecast.setBackground(getResources().getDrawable(R.drawable.now_weather_image_showerrain));
+                            break;
+                        }
+                        case "雷阵雨" :{
+                            imageView_forecast.setBackground(getResources().getDrawable(R.drawable.now_weather_image_thundershower));
+                            break;
+                        }
+                        case "小雨":{
+                            imageView_forecast.setBackground(getResources().getDrawable(R.drawable.now_weather_image_ligthrain));
+                            break;
+                        }
+                        case "中雨":{
+                            imageView_forecast.setBackground(getResources().getDrawable(R.drawable.now_weather_image_moderaterain));
+                            break;
+                        }
+                        case "大雨":{
+                            imageView_forecast.setBackground(getResources().getDrawable(R.drawable.now_weather_image_heavyrain));
+                            break;
+                        }
+                        case "暴雨":{
+                            imageView_forecast.setBackground(getResources().getDrawable(R.drawable.now_weather_image_stormrian));
+                            break;
+                        }
+                        case "大暴雨":{
+                            imageView_forecast.setBackground(getResources().getDrawable(R.drawable.now_weather_image_heavystorm));
+                            break;
+                        }
+                        case "雨夹雪":{
+                            imageView_forecast.setBackground(getResources().getDrawable(R.drawable.now_weather_image_snow_rain));
+                            break;
+                        }
+                        case "晴间多云":{
+                            imageView_forecast.setBackground(getResources().getDrawable(R.drawable.now_weather_image_sun_cloud));
+                            break;
+                        }
+                        case "小雪": {
+                            imageView_forecast.setBackground(getResources().getDrawable(R.drawable.now_weather_image_ligthsnow));
+                            break;
+                        }
+                        case "中雪":{
+                            imageView_forecast.setBackground(getResources().getDrawable(R.drawable.now_weather_image_moderatesnow));
+                            break;
+                        }
+                        case "大雪" :{
+                            imageView_forecast.setBackground(getResources().getDrawable(R.drawable.now_weather_image_heavysnow));
+                            break;
+                        }
+                        case "暴雪" :{
+                            imageView_forecast.setBackground(getResources().getDrawable(R.drawable.now_weather_image_snowstorm));
+                            break;
+                        }
+                        default:break;
+                    }
+                    ImageView imageView_forecast2 = (ImageView)view.findViewById(R.id.image_view_forecast_item2);
+                    switch (dailyBeanList.get(i).getTextNight()){
+                        case "多云": {
+                            imageView_forecast2.setBackground(getResources().getDrawable(R.drawable.now_weather_image_cloudy));
+                            break;
+                        }
+                        case "晴": {
+                            imageView_forecast2.setBackground(getResources().getDrawable(R.drawable.now_weather_image_sun));
+                            break;
+                        }
+                        case "阴": {
+                            imageView_forecast2.setBackground(getResources().getDrawable(R.drawable.now_weather_image_overcast));
+                            break;
+                        }
+                        case "阵雨": {
+                            imageView_forecast2.setBackground(getResources().getDrawable(R.drawable.now_weather_image_showerrain));
+                            break;
+                        }
+                        case "雷阵雨" :{
+                            imageView_forecast2.setBackground(getResources().getDrawable(R.drawable.now_weather_image_thundershower));
+                            break;
+                        }
+                        case "小雨":{
+                            imageView_forecast2.setBackground(getResources().getDrawable(R.drawable.now_weather_image_ligthrain));
+                            break;
+                        }
+                        case "中雨":{
+                            imageView_forecast2.setBackground(getResources().getDrawable(R.drawable.now_weather_image_moderaterain));
+                            break;
+                        }
+                        case "大雨":{
+                            imageView_forecast2.setBackground(getResources().getDrawable(R.drawable.now_weather_image_heavyrain));
+                            break;
+                        }
+                        case "暴雨":{
+                            imageView_forecast2.setBackground(getResources().getDrawable(R.drawable.now_weather_image_stormrian));
+                            break;
+                        }
+                        case "大暴雨":{
+                            imageView_forecast2.setBackground(getResources().getDrawable(R.drawable.now_weather_image_heavystorm));
+                            break;
+                        }
+                        case "雨夹雪":{
+                            imageView_forecast2.setBackground(getResources().getDrawable(R.drawable.now_weather_image_snow_rain));
+                            break;
+                        }
+                        case "晴间多云":{
+                            imageView_forecast2.setBackground(getResources().getDrawable(R.drawable.now_weather_image_sun_cloud));
+                            break;
+                        }
+                        case "小雪": {
+                            imageView_forecast2.setBackground(getResources().getDrawable(R.drawable.now_weather_image_ligthsnow));
+                            break;
+                        }
+                        case "中雪":{
+                            imageView_forecast2.setBackground(getResources().getDrawable(R.drawable.now_weather_image_moderatesnow));
+                            break;
+                        }
+                        case "大雪" :{
+                            imageView_forecast2.setBackground(getResources().getDrawable(R.drawable.now_weather_image_heavysnow));
+                            break;
+                        }
+                        case "暴雪" :{
+                            imageView_forecast2.setBackground(getResources().getDrawable(R.drawable.now_weather_image_snowstorm));
+                            break;
+                        }
+                        default:break;
+                    }
                     dateText.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
                     dateText.setText(dailyBeanList.get(i).getFxDate());
                     infoText.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
-                    infoText.setText(dailyBeanList.get(i).getTextDay()+"/"+dailyBeanList.get(i).getTextNight());
+                    infoText.setText(" / ");
                     maxText.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
-                    maxText.setText(dailyBeanList.get(i).getTempMax()+"'C");
+                    maxText.setText(dailyBeanList.get(i).getTempMax()+"℃");
                     minText.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
-                    minText.setText(dailyBeanList.get(i).getTempMin()+"'C");
+                    minText.setText(dailyBeanList.get(i).getTempMin()+"℃");
                     if(!dateText.getText().toString().isEmpty()){
                         view.setOnClickListener(new View.OnClickListener() {
                             //点击七天预报的每行，打开浏览器，显示该城市30天详细天气预报界面
@@ -356,6 +567,55 @@ public class WeatherActivity extends AppCompatActivity {
                 carWashText.setText(dailyBeanList.get(1).getText());
                 comfortText.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
                 comfortText.setText(dailyBeanList.get(2).getText());
+            }
+        });
+
+
+        //预警信息显示
+        QWeather.getWarning(this, mWeatherId, Lang.ZH_HANS, new QWeather.OnResultWarningListener() {
+            @Override
+            public void onError(Throwable throwable) {
+            }
+
+            @Override
+            public void onSuccess(WarningBean warningBean) {
+                List<WarningBean.WarningBeanBase> warningBeanBaseList = warningBean.getWarningList();
+                String warnningText = "";
+                for (int i = 0; i < warningBeanBaseList.size(); i++) {
+                    warnningText += warningBeanBaseList.get(i).getTitle();
+                    warnningText += "\n";
+                }
+                Warnning_text.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
+                Warnning_text.setTextColor(android.graphics.Color.rgb(255,255,255));
+                if (warnningText.isEmpty()) {
+                    Warnning_text.setText("暂无预警信息");
+                } else {
+                    Warnning_text.setText(warnningText);
+                    Warnning_text.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            QWeather.getGeoCityLookup(WeatherActivity.this, mWeatherId, Range.CN, 20, Lang.EN, new QWeather.OnResultGeoListener() {
+                                @Override
+                                public void onError(Throwable throwable) {
+
+                                }
+
+                                @Override
+                                public void onSuccess(GeoBean geoBean) {
+                                    List<GeoBean.LocationBean> locationBeanList = geoBean.getLocationBean();
+                                    if(locationBeanList.size()==1) {
+                                        String name =  locationBeanList.get(0).getName();
+                                        String mWeatherid = locationBeanList.get(0).getId();
+                                        String sonOfUri = "https://www.qweather.com/severe-weather/" + name.toLowerCase() + "-" + mWeatherid + ".html";
+                                        Uri uri = Uri.parse(sonOfUri);
+                                        Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+                                        startActivity(intent);
+                                    }
+                                }
+                            });
+                        }
+                    });
+                }
             }
         });
     }

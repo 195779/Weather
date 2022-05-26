@@ -17,23 +17,38 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal">
 
-        <Button
-            android:id="@+id/nav_button"
-            android:layout_width="30dp"
-            android:layout_height="30dp"
-            android:layout_alignParentLeft="true"
-            android:layout_centerVertical="true"
-            android:layout_marginLeft="10dp"
-            android:background="@drawable/ic_home" />
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginTop="8dp"
+            android:id="@+id/Home_layout">
+
+            <Button
+                android:id="@+id/nav_button"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:layout_alignParentLeft="true"
+                android:layout_centerVertical="true"
+                android:layout_marginLeft="10dp"
+                android:background="@drawable/ic_home" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="返回本地"
+                android:layout_marginLeft="5dp"
+                android:textSize="10sp"/>
+        </LinearLayout>
+
 
         <TextView
             android:id="@+id/title_city"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerInParent="true"
+            android:layout_marginLeft="60dp"
             android:layout_marginTop="10dp"
             android:textColor="#fff"
-            android:layout_marginLeft="60dp"
             android:textColorHighlight="@color/black"
             android:textColorLink="@color/black"
             android:textSize="30sp" />
@@ -44,9 +59,9 @@
             android:layout_height="wrap_content"
             android:layout_alignParentRight="true"
             android:layout_centerVertical="true"
+            android:layout_marginLeft="40dp"
             android:layout_marginRight="10dp"
             android:textColor="#fff"
-            android:layout_marginLeft="40dp"
             android:textColorHighlight="@color/black"
             android:textColorLink="@color/black"
             android:textSize="10sp" />

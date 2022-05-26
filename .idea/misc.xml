@@ -3,6 +3,22 @@
   <component name="DesignSurface">
     <option name="filePathToZoomLevelMap">
       <map>
+        <entry key="..\:/CODING__ALAN_CF/AS_Explore/Weather/app/src/main/res/drawable/now_weather_image.xml" value="0.145" />
+        <entry key="..\:/CODING__ALAN_CF/AS_Explore/Weather/app/src/main/res/drawable/now_weather_image_cloudy.xml" value="0.1205" />
+        <entry key="..\:/CODING__ALAN_CF/AS_Explore/Weather/app/src/main/res/drawable/now_weather_image_heavyrain.xml" value="0.1205" />
+        <entry key="..\:/CODING__ALAN_CF/AS_Explore/Weather/app/src/main/res/drawable/now_weather_image_heavysnow.xml" value="0.145" />
+        <entry key="..\:/CODING__ALAN_CF/AS_Explore/Weather/app/src/main/res/drawable/now_weather_image_heavystorm.xml" value="0.1205" />
+        <entry key="..\:/CODING__ALAN_CF/AS_Explore/Weather/app/src/main/res/drawable/now_weather_image_ligthrain.xml" value="0.1205" />
+        <entry key="..\:/CODING__ALAN_CF/AS_Explore/Weather/app/src/main/res/drawable/now_weather_image_ligthsnow.xml" value="0.145" />
+        <entry key="..\:/CODING__ALAN_CF/AS_Explore/Weather/app/src/main/res/drawable/now_weather_image_moderaterain.xml" value="0.1205" />
+        <entry key="..\:/CODING__ALAN_CF/AS_Explore/Weather/app/src/main/res/drawable/now_weather_image_moderatesnow.xml" value="0.145" />
+        <entry key="..\:/CODING__ALAN_CF/AS_Explore/Weather/app/src/main/res/drawable/now_weather_image_overcast.xml" value="0.1205" />
+        <entry key="..\:/CODING__ALAN_CF/AS_Explore/Weather/app/src/main/res/drawable/now_weather_image_showerrain.xml" value="0.1205" />
+        <entry key="..\:/CODING__ALAN_CF/AS_Explore/Weather/app/src/main/res/drawable/now_weather_image_snow_rain.xml" value="0.1205" />
+        <entry key="..\:/CODING__ALAN_CF/AS_Explore/Weather/app/src/main/res/drawable/now_weather_image_snowstorm.xml" value="0.145" />
+        <entry key="..\:/CODING__ALAN_CF/AS_Explore/Weather/app/src/main/res/drawable/now_weather_image_stormrian.xml" value="0.1205" />
+        <entry key="..\:/CODING__ALAN_CF/AS_Explore/Weather/app/src/main/res/drawable/now_weather_image_sun_cloud.xml" value="0.145" />
+        <entry key="..\:/CODING__ALAN_CF/AS_Explore/Weather/app/src/main/res/drawable/now_weather_image_thundershower.xml" value="0.1205" />
         <entry key="..\:/CODING__ALAN_CF/AS_Explore/Weather/app/src/main/res/layout/First.xml" value="0.22916666666666666" />
         <entry key="..\:/CODING__ALAN_CF/AS_Explore/Weather/app/src/main/res/layout/activity_main.xml" value="0.264" />
         <entry key="..\:/CODING__ALAN_CF/AS_Explore/Weather/app/src/main/res/layout/activity_weather.xml" value="0.21739130434782608" />
