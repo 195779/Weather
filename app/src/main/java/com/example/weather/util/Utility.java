@@ -114,28 +114,5 @@ public class Utility {
         return false;
     }
 
-    public static boolean handleWeatherResponse(String weatherId, String countyName, Context context) {
-        if (!weatherId.isEmpty() && !countyName.isEmpty()) {
-            QWeather.getWeather7D(context, weatherId, Lang.ZH_HANS, Unit.METRIC, new QWeather.OnResultWeatherDailyListener() {
-                @Override
-                public void onError(Throwable throwable) {
-                    Log.e("onError", throwable.toString());
-                    throwable.printStackTrace();
-                }
-
-                @Override
-                public void onSuccess(WeatherDailyBean weatherDailyBean) {
-                    Weather weather = new Weather();
-                    weather.setWeatherId(weatherId);
-                    weather.setCountyName(countyName);
-                    weather.setUpdateTime(weatherDailyBean.getBasic().getUpdateTime());
-                    List<WeatherDailyBean.DailyBean> dailyBeanList = weatherDailyBean.getDaily();
-                    weather.save();
-                }
-            });
-            return true;
-        }
-        return false;
-    }
 
 }

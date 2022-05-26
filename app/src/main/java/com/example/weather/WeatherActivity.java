@@ -96,21 +96,22 @@ public class WeatherActivity extends AppCompatActivity {
 
     private ImageView shezhi;
 
+    public String thisWeatherId;
+    //给每个界面一个固定weatherID，更新天气的时候依据这个ID更新界面数据
+    //返回本地的时候，更新这个ID，再使用这个ID更新界面数据
+
 
     public WeatherActivity() {
     }
 
-    //左右滑动
-    GestureDetector mGestureDetector;  //手势检测对象
-    private static final String TAG = "MainActivity";
-    private static final int  FLING_MIN_DISTANCE =  100;//滑动最小的距离
-    private static final int  FLING_MIN_VELOCITY =  50;//滑动最小的速度
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_weather);
+        overridePendingTransition(R.anim.in_from_right,
+                R.anim.out_to_left);
 
         bingPicImg = (ImageView) findViewById(R.id.bing_pic_img);
         weatherLayout = (ScrollView) findViewById(R.id.weather_layout);
@@ -172,8 +173,9 @@ public class WeatherActivity extends AppCompatActivity {
                 .apply(optionsBlur)
                 .into(aqi_image);
 
-        //显示天气信息
-        show_Weather_List(getIntent());
+        //从MainActivity转过来的时候显示天气信息
+        thisWeatherId = getIntent().getStringExtra("weatherId");
+        show_Weather_List(thisWeatherId);
 
         titleCity.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -197,7 +199,7 @@ public class WeatherActivity extends AppCompatActivity {
             @Override
             public void onRefresh() {
                 //下拉界面，请求天气信息，更新天气信息
-                show_Weather_List(getIntent());
+                show_Weather_List(thisWeatherId);
                 //更新之后隐藏下拉刷新的进度条
                 swipeRefresh.setRefreshing(false);
             }
@@ -235,19 +237,23 @@ public class WeatherActivity extends AppCompatActivity {
                                     List<GeoBean.LocationBean> locationBeanList = geoBean.getLocationBean();
                                     if (locationBeanList.size() == 1) {
                                         String weatherId = locationBeanList.get(0).getId();
-                                        Intent intent = new Intent();
+                                        //Intent intent = new Intent();
                                         //Intent intent = new Intent(WeatherActivity.this, WeatherActivity.class).setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
-                                        intent.putExtra("weatherId", weatherId);
-                                        show_Weather_List(intent);
+                                        show_Weather_List(weatherId);
+                                        thisWeatherId = weatherId;
+                                        locationClient.stop();
                                         //startActivity(intent);
                                     } else {
                                         for (int i = 0; i < locationBeanList.size(); i++) {
                                             if (bdLocation.getCity().equals(locationBeanList.get(i).getAdm2())) {
                                                 String weatherId = locationBeanList.get(i).getId();
-                                                Intent intent = new Intent();
+                                                //Intent intent = new Intent();
                                                 //Intent intent = new Intent(WeatherActivity.this, WeatherActivity.class).setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
-                                                intent.putExtra("weatherId", weatherId);
-                                                show_Weather_List(intent);
+                                                //intent.putExtra("weatherId", weatherId);
+                                                //String mWeatherId = intent.getStringExtra("weatherId");
+                                                show_Weather_List(weatherId);
+                                                thisWeatherId = weatherId;
+                                                locationClient.stop();
                                                 //startActivity(intent);
                                             }
                                         }
@@ -286,9 +292,8 @@ public class WeatherActivity extends AppCompatActivity {
 
 
 
-        //显示天气信息
-    public void show_Weather_List(Intent intent){
-        String mWeatherId = intent.getStringExtra("weatherId");
+    //显示天气信息
+    public void show_Weather_List(String mWeatherId){
         QWeather.getGeoCityLookup(this, mWeatherId, Range.CN, 20, Lang.ZH_HANS, new QWeather.OnResultGeoListener() {
             @Override
             public void onError(Throwable throwable) {
@@ -695,11 +700,4 @@ public class WeatherActivity extends AppCompatActivity {
         });
     }
 
-    @Override
-    protected void onStop() {
-        super.onStop();
-        /*if(locationClient.isStarted()){
-            locationClient.stop();
-        }*/
-    }
 }

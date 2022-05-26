@@ -33,6 +33,8 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         HeConfig.init("HE2205192124421095", "75901f8fc05649029011d79f8571f871");
         HeConfig.switchToDevService();
+        overridePendingTransition(R.anim.in_from_right,
+                R.anim.out_to_left);
         try {
             LocationClient.setAgreePrivacy(true);
             locationClient = new LocationClient(this);
@@ -65,6 +67,7 @@ public class MainActivity extends AppCompatActivity {
                                 Intent intent = new Intent(MainActivity.this,WeatherActivity.class).setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
                                 intent.putExtra("weatherId",weatherId);
                                 locationClient.stop();//停止位置服务
+                                //打开天气显示界面
                                 new Handler().postDelayed(new Runnable() {
                                     @Override
                                     public void run() {

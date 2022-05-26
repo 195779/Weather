@@ -4,6 +4,7 @@ import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -108,9 +109,22 @@ public class ChooseAreaFragment extends Fragment {
                 } else if (currentLevel == LEVEL_COUNTY) {
                     String weatherId = countyList.get(position).getWeatherId();
                     //更新weather数据
-                    Intent intent = new Intent(getActivity(), WeatherActivity.class).setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
-                    intent.putExtra("weatherId",weatherId);
-                    startActivity(intent);
+                    //跳转到weatheractivity
+                    if(getActivity() instanceof MainActivity) {
+                        //第一次打开软件的时候，第一个打开的是MainActivity，这时候做anctivity跳转
+                        Intent intent = new Intent(getActivity(), WeatherActivity.class).setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+                        intent.putExtra("weatherId", weatherId);
+                        startActivity(intent);
+                    }
+                    if(getActivity() instanceof WeatherActivity){
+                        //已经打开weatherActivity之后再选择城市的时候，只去更新weatherActivity的界面数据而不再跳转
+                        //Intent intent = new Intent();
+                        //intent.putExtra("weatherId", weatherId);
+                        ((WeatherActivity) getActivity()).show_Weather_List(weatherId);
+                        //更改界面的weatherID
+                        ((WeatherActivity) getActivity()).thisWeatherId = weatherId;
+                        ((WeatherActivity) getActivity()).drawerLayout.closeDrawer(Gravity.LEFT);
+                    }
                 }
                 //检验能否查询出天气数据
                 //getWether();
