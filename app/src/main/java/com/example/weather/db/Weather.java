@@ -8,50 +8,19 @@ import org.litepal.crud.LitePalSupport;
 import java.util.List;
 
 public class Weather extends LitePalSupport {
+    //常用城市的存储表
+    private String weathrId;
     private String countyName;
-    private String weatherid;
-    private String updateTime;//getUpadateTime() in WeatherDailyBean.Basic
-    private String date;
-    private String aqi;//空气质量//NOW
-    private String pm25;//pm2.5//NOW
-    /*private String temperature;//温度
-    private String info;//天气状态
-    private String comf;
-    private String cw;
-    private String sport;
-    private String max;
-    private String min;*/
+    private String cityName;
+    private String temp;
+    private String text;
 
-    public String getDate() {
-        return date;
+    public String getWeathrId() {
+        return weathrId;
     }
 
-    public void setDate(String date) {
-        this.date = date;
-    }
-
-    public String getWeatherid() {
-        return weatherid;
-    }
-
-    public void setWeatherid(String weatherid) {
-        this.weatherid = weatherid;
-    }
-
-    public String getAqi() {
-        return aqi;
-    }
-
-    public void setAqi(String aqi) {
-        this.aqi = aqi;
-    }
-
-    public String getPm25() {
-        return pm25;
-    }
-
-    public void setPm25(String pm25) {
-        this.pm25 = pm25;
+    public void setWeathrId(String weathrId) {
+        this.weathrId = weathrId;
     }
 
     public String getCountyName() {
@@ -62,21 +31,27 @@ public class Weather extends LitePalSupport {
         this.countyName = countyName;
     }
 
-    public String getWeatherId() {
-        return weatherid;
+    public String getCityName() {
+        return cityName;
     }
 
-    public void setWeatherId(String weatherId) {
-        this.weatherid = weatherId;
+    public void setCityName(String cityName) {
+        this.cityName = cityName;
     }
 
-    public String getUpdateTime() {
-        return updateTime;
+    public String getTemp() {
+        return temp;
     }
 
-    public void setUpdateTime(String updateTime) {
-        this.updateTime = updateTime;
+    public void setTemp(String temp) {
+        this.temp = temp;
     }
 
+    public String getText() {
+        return text;
+    }
 
+    public void setText(String text) {
+        this.text = text;
+    }
 }

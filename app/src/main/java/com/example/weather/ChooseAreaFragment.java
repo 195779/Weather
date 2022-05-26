@@ -106,49 +106,12 @@ public class ChooseAreaFragment extends Fragment {
                     selectedCity = cityList.get(position);
                     queryCounties();
                 } else if (currentLevel == LEVEL_COUNTY) {
-
                     String weatherId = countyList.get(position).getWeatherId();
-
-                    /*QWeather.getWeather7D(getActivity(), weatherId, Lang.ZH_HANS, Unit.METRIC, new QWeather.OnResultWeatherDailyListener() {
-                        @Override
-                        public void onError(Throwable throwable) {
-                            Log.e("onError",throwable.toString());
-                            throwable.printStackTrace();
-                        }
-
-                        @Override
-                        public void onSuccess(WeatherDailyBean weatherDailyBean) {
-                            List<WeatherDailyBean.DailyBean> dailyBeanList = weatherDailyBean.getDaily();
-                            for(int i=0;i<dailyBeanList.size();i++){
-                                Weather weather = new Weather();
-                                weather.setWeatherId(weatherId);
-                                weather.setCountyName(countyList.get(position).getCountyName());
-                                weather.setUpdateTime(weatherDailyBean.getBasic().getUpdateTime());
-                                weather.setDate(dailyBeanList.get(i).getFxDate());
-                                weather.saveOrUpdate("weatherid = ? && date = ?",weatherId,dailyBeanList.get(i).getFxDate());
-                            }
-                        }
-                    });*/
-
-
                     //更新weather数据
                     Intent intent = new Intent(getActivity(), WeatherActivity.class).setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
                     intent.putExtra("weatherId",weatherId);
                     startActivity(intent);
-                    /*if (getActivity() instanceof MainActivity) {
-                        Intent intent = new Intent(getActivity(), WeatherActivity.class);
-                        intent.putExtra("weather_id", weatherId);
-                        startActivity(intent);
-                        getActivity().finish();
-                    } else if (getActivity() instanceof WeatherActivity) {
-                        WeatherActivity activity = (WeatherActivity) getActivity();
-                        activity.drawerLayout.closeDrawers();
-                        activity.swipeRefresh.setRefreshing(true);
-                        activity.requestWeather(weatherId);
-                    }*/
                 }
-
-
                 //检验能否查询出天气数据
                 //getWether();
             }

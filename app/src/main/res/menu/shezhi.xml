@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/add"
+        android:title="管理常用城市" />
+    <item
+        android:id="@+id/remove"
+        android:title="分享" />
+    <item
+        android:id="@+id/share"
+        android:title="XXX" />
+</menu>

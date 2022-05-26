@@ -1,8 +1,10 @@
 package com.example.weather;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.PopupMenu;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
+import androidx.viewpager2.widget.ViewPager2;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -13,14 +15,17 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.provider.ContactsContract;
 import android.util.Log;
+import android.view.GestureDetector;
 import android.view.Gravity;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.baidu.location.BDLocation;
 import com.baidu.location.BDLocationListener;
@@ -89,10 +94,17 @@ public class WeatherActivity extends AppCompatActivity {
 
     private TextView Warnning_text;
 
-    private LinearLayout Home_layout;
+    private ImageView shezhi;
+
 
     public WeatherActivity() {
     }
+
+    //左右滑动
+    GestureDetector mGestureDetector;  //手势检测对象
+    private static final String TAG = "MainActivity";
+    private static final int  FLING_MIN_DISTANCE =  100;//滑动最小的距离
+    private static final int  FLING_MIN_VELOCITY =  50;//滑动最小的速度
 
 
     @Override
@@ -103,7 +115,6 @@ public class WeatherActivity extends AppCompatActivity {
         bingPicImg = (ImageView) findViewById(R.id.bing_pic_img);
         weatherLayout = (ScrollView) findViewById(R.id.weather_layout);
         titleCity = (TextView) findViewById(R.id.title_city);
-        titleUpdateTime = (TextView) findViewById(R.id.title_update_time);
         degreeText = (TextView) findViewById(R.id.degree_text);
         weatherInfoText = (TextView) findViewById(R.id.weather_info_text);
         forecastLayout = (LinearLayout) findViewById(R.id.forecast_layout);
@@ -118,7 +129,24 @@ public class WeatherActivity extends AppCompatActivity {
         navButton = (Button) findViewById(R.id.nav_button);
         Now_weather_image = (ImageView) findViewById(R.id.Now_weather_image);
         Warnning_text = (TextView) findViewById(R.id.Warnning_text);
-        Home_layout = (LinearLayout) findViewById(R.id.Home_layout);
+        shezhi = (ImageView) findViewById(R.id.image_shezhi);
+
+
+        //设置的按键
+        shezhi.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                showPopupMenu(shezhi);
+            }
+        });
+
+
+
+
+        //左右滑动
+
+
+
 
 
         ImageView title_image = (ImageView) findViewById(R.id.title_image);
@@ -240,7 +268,25 @@ public class WeatherActivity extends AppCompatActivity {
     }
 
 
-    //显示天气信息
+    private void showPopupMenu(View view) {
+        // View当前PopupMenu显示的相对View的位置
+        PopupMenu popupMenu = new PopupMenu(this, view);
+        // menu布局
+        popupMenu.getMenuInflater().inflate(R.menu.shezhi, popupMenu.getMenu());
+        // menu的item点击事件
+        popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem item) {
+                Toast.makeText(getApplicationContext(), item.getTitle(), Toast.LENGTH_SHORT).show();
+                return false;
+            }
+        });
+        popupMenu.show();
+    }
+
+
+
+        //显示天气信息
     public void show_Weather_List(Intent intent){
         String mWeatherId = intent.getStringExtra("weatherId");
         QWeather.getGeoCityLookup(this, mWeatherId, Range.CN, 20, Lang.ZH_HANS, new QWeather.OnResultGeoListener() {
@@ -266,7 +312,7 @@ public class WeatherActivity extends AppCompatActivity {
 
             @Override
             public void onSuccess(WeatherNowBean weatherNowBean) {
-                titleUpdateTime.setText(weatherNowBean.getBasic().getUpdateTime());
+
                 degreeText.setText(weatherNowBean.getNow().getTemp() + "℃");
                 switch (weatherNowBean.getNow().getText()){
                     case "多云": {

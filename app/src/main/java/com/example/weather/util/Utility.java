@@ -105,9 +105,6 @@ public class Utility {
                             }
                         }
                     });
-                    //county.setWeatherId(countyObject.getString("weather_id"));
-                    //county.setWeatherId(weatherId);
-                    //county.save();
                 }
                 return true;
             } catch (JSONException e) {
