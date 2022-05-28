@@ -19,6 +19,7 @@ import android.view.GestureDetector;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -34,6 +35,7 @@ import com.baidu.location.LocationClientOption;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.BaseRequestOptions;
 import com.bumptech.glide.request.RequestOptions;
+import com.example.weather.db.Weather;
 import com.example.weather.util.HttpUtil;
 import com.qweather.sdk.bean.IndicesBean;
 import com.qweather.sdk.bean.WarningBean;
@@ -46,6 +48,8 @@ import com.qweather.sdk.bean.geo.GeoBean;
 import com.qweather.sdk.bean.weather.WeatherDailyBean;
 import com.qweather.sdk.bean.weather.WeatherNowBean;
 import com.qweather.sdk.view.QWeather;
+
+import org.litepal.LitePal;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -101,6 +105,8 @@ public class WeatherActivity extends AppCompatActivity {
     //返回本地的时候，更新这个ID，再使用这个ID更新界面数据
 
 
+
+
     public WeatherActivity() {
     }
 
@@ -140,14 +146,6 @@ public class WeatherActivity extends AppCompatActivity {
                 showPopupMenu(shezhi);
             }
         });
-
-
-
-
-        //左右滑动
-
-
-
 
 
         ImageView title_image = (ImageView) findViewById(R.id.title_image);
@@ -283,7 +281,21 @@ public class WeatherActivity extends AppCompatActivity {
         popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
             @Override
             public boolean onMenuItemClick(MenuItem item) {
-                Toast.makeText(getApplicationContext(), item.getTitle(), Toast.LENGTH_SHORT).show();
+                //Toast.makeText(getApplicationContext(), item.getTitle(), Toast.LENGTH_SHORT).show();
+                if(item.getTitle().equals("添加为常用城市")){
+                    String weatherId = thisWeatherId;
+                    String ccName = titleCity.getText().toString();
+                    String text = degreeText.getText().toString();
+                    text += " ¦ " + weatherInfoText.getText().toString().substring(0,2);
+                    Weather weather = new Weather();
+                    weather.setCCName(ccName);
+                    weather.setWeatherId(weatherId);
+                    weather.setText(text);
+                    weather.saveOrUpdate("weatherid=?",weatherId);
+                }
+                if(item.getTitle().equals("管理常用城市")){
+                    updateWeather();
+                }
                 return false;
             }
         });
@@ -699,5 +711,34 @@ public class WeatherActivity extends AppCompatActivity {
             }
         });
     }
+
+
+    public void updateWeather(){
+        List<Weather> new_WeatherList = LitePal.findAll(Weather.class);
+        if(new_WeatherList.size()>0){
+            for (Weather weather : new_WeatherList) {
+                String meatherId = weather.getWeatherId();
+                QWeather.getWeatherNow(this, meatherId, Lang.ZH_HANS, Unit.METRIC, new QWeather.OnResultWeatherNowListener() {
+                    @Override
+                    public void onError(Throwable throwable) {
+
+                    }
+
+                    @Override
+                    public void onSuccess(WeatherNowBean weatherNowBean) {
+                        Weather weather1 = new Weather();
+                        weather1.setText(weatherNowBean.getNow().getTemp() + "℃" + " ¦ " + weatherNowBean.getNow().getText());
+                        weather1.setCCName(weather.getCCName());
+                        weather1.setWeatherId(meatherId);
+                        weather1.saveOrUpdate("weatherId=?",meatherId);
+                    }
+                });
+                //Toast.makeText(this,weather.getText(),Toast.LENGTH_SHORT).show();
+            }
+        }
+        ManageFragment.qureyWeather_manage();
+        drawerLayout.openDrawer(Gravity.RIGHT);
+    }
+
 
 }
