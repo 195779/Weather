@@ -50,8 +50,9 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginLeft="115dp"
-            android:gravity="center"
+            android:gravity="center_vertical"
             android:textColor="#fff"
+            android:layout_weight="1"
             android:textColorHighlight="@color/black"
             android:textColorLink="@color/white"
             android:textSize="26sp" />

@@ -4,22 +4,18 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.PopupMenu;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
-import androidx.viewpager2.widget.ViewPager2;
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Typeface;
-import android.media.Image;
 import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.provider.ContactsContract;
 import android.util.Log;
-import android.view.GestureDetector;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
-import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -36,7 +32,9 @@ import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.BaseRequestOptions;
 import com.bumptech.glide.request.RequestOptions;
 import com.example.weather.db.Weather;
+import com.example.weather.gson.TencentData;
 import com.example.weather.util.HttpUtil;
+import com.google.gson.Gson;
 import com.qweather.sdk.bean.IndicesBean;
 import com.qweather.sdk.bean.WarningBean;
 import com.qweather.sdk.bean.air.AirNowBean;
@@ -50,8 +48,19 @@ import com.qweather.sdk.bean.weather.WeatherNowBean;
 import com.qweather.sdk.view.QWeather;
 
 import org.litepal.LitePal;
+import org.w3c.dom.Text;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -82,9 +91,15 @@ public class WeatherActivity extends AppCompatActivity {
 
     private LinearLayout forecastLayout;
 
-    private TextView aqiText;
+    private TextView pm10Text;
 
     private TextView pm25Text;
+
+    private TextView qualityText;
+
+    private TextView show_more_aqi;
+
+    private TextView primaryText;
 
     private TextView comfortText;
 
@@ -105,6 +120,18 @@ public class WeatherActivity extends AppCompatActivity {
     //返回本地的时候，更新这个ID，再使用这个ID更新界面数据
 
 
+    private TextView CityName_yiqing;
+    private TextView city_2;
+    private TextView yiqing_confirm_add;
+    private TextView yiqing_wz_add;
+    private TextView yiqing_total_confirm;
+    private TextView yiqing_confirm;
+    private TextView yiqing_medium;
+    private TextView yiqing_height;
+    private TextView show_more_yiqing;
+
+    private TextView show_more_suggestion;
+
 
 
     public WeatherActivity() {
@@ -119,14 +146,21 @@ public class WeatherActivity extends AppCompatActivity {
         overridePendingTransition(R.anim.in_from_right,
                 R.anim.out_to_left);
 
+
+
+
+
         bingPicImg = (ImageView) findViewById(R.id.bing_pic_img);
         weatherLayout = (ScrollView) findViewById(R.id.weather_layout);
         titleCity = (TextView) findViewById(R.id.title_city);
         degreeText = (TextView) findViewById(R.id.degree_text);
         weatherInfoText = (TextView) findViewById(R.id.weather_info_text);
         forecastLayout = (LinearLayout) findViewById(R.id.forecast_layout);
-        aqiText = (TextView) findViewById(R.id.aqi_text);
+        pm10Text = (TextView) findViewById(R.id.pm10_text);
         pm25Text = (TextView) findViewById(R.id.pm25_text);
+        qualityText = (TextView) findViewById(R.id.quality_text);
+        primaryText = (TextView)findViewById(R.id.primary_text);
+        show_more_aqi = (TextView) findViewById(R.id.show_more_aqi);
         comfortText = (TextView) findViewById(R.id.comfort_text);
         carWashText = (TextView) findViewById(R.id.car_wash_text);
         sportText = (TextView) findViewById(R.id.sport_text);
@@ -137,8 +171,16 @@ public class WeatherActivity extends AppCompatActivity {
         Now_weather_image = (ImageView) findViewById(R.id.Now_weather_image);
         Warnning_text = (TextView) findViewById(R.id.Warnning_text);
         shezhi = (ImageView) findViewById(R.id.image_shezhi);
-
-
+        CityName_yiqing = (TextView) findViewById(R.id.City);
+        city_2 = (TextView)findViewById(R.id.city_2);
+        yiqing_confirm_add = (TextView)findViewById(R.id.YiQing_Head_text_confirm_add);
+        yiqing_wz_add = (TextView)findViewById(R.id.YiQing_Head_text_wz_add);
+        yiqing_confirm = (TextView)findViewById(R.id.YiQing_Head_text_confirm);
+        yiqing_height = (TextView)findViewById(R.id.YiQing_Head_text_Height);
+        yiqing_total_confirm = (TextView)findViewById(R.id.YiQing_Head_text_total_confirm);
+        yiqing_medium = (TextView) findViewById(R.id.YiQing_Head_text_Medium);
+        show_more_yiqing = (TextView) findViewById(R.id.show_more_yiqing);
+        show_more_suggestion = (TextView) findViewById(R.id.show_more_suggestion);
         //设置的按键
         shezhi.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -153,6 +195,7 @@ public class WeatherActivity extends AppCompatActivity {
         ImageView now_image = (ImageView) findViewById(R.id.now_image);
         ImageView aqi_image = (ImageView) findViewById(R.id.aqi_image);
         ImageView suggestion = (ImageView)findViewById(R.id.suggestion_image);
+        ImageView yiqing_image = (ImageView)findViewById(R.id.YiQing_image);
         //图像模糊化处理Glide
         BaseRequestOptions optionsBlur = new RequestOptions().transform(new BlurTransformation(5, 35));
         Glide.with(this).load(getDrawable(R.drawable.ic_home))
@@ -170,6 +213,9 @@ public class WeatherActivity extends AppCompatActivity {
         Glide.with(this).load(getDrawable(R.drawable.ic_home))
                 .apply(optionsBlur)
                 .into(aqi_image);
+        Glide.with(this).load(getDrawable(R.drawable.ic_home))
+                .apply(optionsBlur)
+                .into(yiqing_image);
 
         //从MainActivity转过来的时候显示天气信息
         thisWeatherId = getIntent().getStringExtra("weatherId");
@@ -203,7 +249,86 @@ public class WeatherActivity extends AppCompatActivity {
             }
         });
 
-        navButton.setOnClickListener(new View.OnClickListener() {
+        //跳转浏览器显示更多天气信息
+        show_more_aqi.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                QWeather.getGeoCityLookup(WeatherActivity.this, thisWeatherId, Range.CN, 20, Lang.EN, new QWeather.OnResultGeoListener() {
+                    @Override
+                    public void onError(Throwable throwable) {
+
+                    }
+
+                    @Override
+                    public void onSuccess(GeoBean geoBean) {
+                        List<GeoBean.LocationBean> locationBeanList = geoBean.getLocationBean();
+                        if(locationBeanList.size()==1) {
+                            String name =  locationBeanList.get(0).getName();
+                            String mWeatherid = locationBeanList.get(0).getId();
+                            String sonOfUri = "https://www.qweather.com/air/" + name.toLowerCase() + "-" + mWeatherid + ".html";
+                            Uri uri = Uri.parse(sonOfUri);
+                            Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+                            startActivity(intent);
+                        }
+                    }
+                });
+            }
+        });
+
+        //点击跳转浏览器显示更多生活建议
+        show_more_suggestion.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                QWeather.getGeoCityLookup(WeatherActivity.this, thisWeatherId, Range.CN, 20, Lang.EN, new QWeather.OnResultGeoListener() {
+                    @Override
+                    public void onError(Throwable throwable) {
+
+                    }
+
+                    @Override
+                    public void onSuccess(GeoBean geoBean) {
+                        List<GeoBean.LocationBean> locationBeanList = geoBean.getLocationBean();
+                        if(locationBeanList.size()==1) {
+                            String name =  locationBeanList.get(0).getName();
+                            String mWeatherid = locationBeanList.get(0).getId();
+                            String sonOfUri = "https://www.qweather.com/indices/" + name.toLowerCase() + "-" + mWeatherid + ".html";
+                            Uri uri = Uri.parse(sonOfUri);
+                            Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+                            startActivity(intent);
+                        }
+                    }
+                });
+            }
+        });
+
+        //点击预警信息跳转浏览器显示该城市详细预警信息
+        Warnning_text.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                        QWeather.getGeoCityLookup(WeatherActivity.this, thisWeatherId, Range.CN, 20, Lang.EN, new QWeather.OnResultGeoListener() {
+                            @Override
+                            public void onError(Throwable throwable) {
+
+                            }
+
+                            @Override
+                            public void onSuccess(GeoBean geoBean) {
+                                List<GeoBean.LocationBean> locationBeanList = geoBean.getLocationBean();
+                                if (locationBeanList.size() == 1) {
+                                    String name = locationBeanList.get(0).getName();
+                                    String mWeatherid = locationBeanList.get(0).getId();
+                                    String sonOfUri = "https://www.qweather.com/severe-weather/" + name.toLowerCase() + "-" + mWeatherid + ".html";
+                                    Uri uri = Uri.parse(sonOfUri);
+                                    Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+                                    startActivity(intent);
+                                }
+                            }
+                });
+            }
+        });
+
+        //调用百度定位SDK的方法，获取设备当前的位置信息并根据当前位置所在城市的weatherID来更新天气显示界面
+          navButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 try {
@@ -269,9 +394,12 @@ public class WeatherActivity extends AppCompatActivity {
                 }
             }
         });
+
+
     }
 
 
+    //点击设置之后弹出的菜单显示
     private void showPopupMenu(View view) {
         // View当前PopupMenu显示的相对View的位置
         PopupMenu popupMenu = new PopupMenu(this, view);
@@ -294,6 +422,7 @@ public class WeatherActivity extends AppCompatActivity {
                     weather.saveOrUpdate("weatherid=?",weatherId);
                 }
                 if(item.getTitle().equals("管理常用城市")){
+                    //点击管理常用城市之后，更新并显示常用城市的天气情况
                     updateWeather();
                 }
                 return false;
@@ -304,8 +433,9 @@ public class WeatherActivity extends AppCompatActivity {
 
 
 
-    //显示天气信息
+    //显示全部天气+疫情信息
     public void show_Weather_List(String mWeatherId){
+        //显示城市名称
         QWeather.getGeoCityLookup(this, mWeatherId, Range.CN, 20, Lang.ZH_HANS, new QWeather.OnResultGeoListener() {
             @Override
             public void onError(Throwable throwable) {
@@ -317,11 +447,17 @@ public class WeatherActivity extends AppCompatActivity {
                     titleCity.setTextColor(android.graphics.Color.rgb(0,0,0));
                     titleCity.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
                     titleCity.setText(locationBeanList.get(0).getAdm2() + "/" + locationBeanList.get(0).getName());
+                    CityName_yiqing.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
+                    CityName_yiqing.setTextColor(android.graphics.Color.rgb(255,255,255));
+                    CityName_yiqing.setText(locationBeanList.get(0).getAdm2());
+                    city_2.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
+                    show_YiQing(locationBeanList.get(0).getAdm2(),locationBeanList.get(0).getAdm1());
                 }
             }
         });
 
 
+        //显示当前今天的天气信息
         QWeather.getWeatherNow(this, mWeatherId, Lang.ZH_HANS, Unit.METRIC, new QWeather.OnResultWeatherNowListener() {
             @Override
             public void onError(Throwable throwable) {
@@ -329,7 +465,6 @@ public class WeatherActivity extends AppCompatActivity {
 
             @Override
             public void onSuccess(WeatherNowBean weatherNowBean) {
-
                 degreeText.setText(weatherNowBean.getNow().getTemp() + "℃");
                 switch (weatherNowBean.getNow().getText()){
                     case "多云": {
@@ -402,6 +537,8 @@ public class WeatherActivity extends AppCompatActivity {
                 weatherInfoText.setText(weatherNowBean.getNow().getText() + " ¦ " + weatherNowBean.getNow().getWindDir()+ weatherNowBean.getNow().getWindScale() + "级" + " ¦ " + "相对湿度：" + weatherNowBean.getNow().getHumidity() + " ¦ " + "体感：" +weatherNowBean.getNow().getFeelsLike() + "℃");
             }
         });
+
+        //七天天气预报显示，点击每行，都去跳转浏览器显示详细的天气信息
         QWeather.getWeather7D(this, mWeatherId, Lang.ZH_HANS, Unit.METRIC, new QWeather.OnResultWeatherDailyListener() {
             @Override
             public void onError(Throwable throwable) {
@@ -595,6 +732,8 @@ public class WeatherActivity extends AppCompatActivity {
                 }
             }
         });
+
+        //空气指数显示
         QWeather.getAirNow(this, mWeatherId, Lang.ZH_HANS, new QWeather.OnResultAirNowListener() {
             @Override
             public void onError(Throwable throwable) {
@@ -604,13 +743,23 @@ public class WeatherActivity extends AppCompatActivity {
             @Override
             public void onSuccess(AirNowBean airNowBean) {
                 AirNowBean.NowBean nowBean = airNowBean.getNow();
-                aqiText.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
-                aqiText.setText(nowBean.getAqi());
+                pm10Text.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
+                pm10Text.setText(nowBean.getPm10());
                 pm25Text.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
                 pm25Text.setText(nowBean.getPm2p5());
+                qualityText.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
+                qualityText.setText(nowBean.getCategory());
+                primaryText.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
+                //Toast.makeText(WeatherActivity.this,nowBean.getPrimary(),Toast.LENGTH_SHORT).show();
+                if(nowBean.getPrimary().equals("NA")){
+                    primaryText.setText("无");
+                }else{
+                    primaryText.setText(nowBean.getPrimary());
+                }
             }
         });
 
+        //生活指数显示
         List<IndicesType> indicesTypeList = new ArrayList<>();
         indicesTypeList.add(IndicesType.SPT);
         indicesTypeList.add(IndicesType.CW);
@@ -635,7 +784,7 @@ public class WeatherActivity extends AppCompatActivity {
 
 
         //预警信息显示
-        QWeather.getWarning(this, mWeatherId, Lang.ZH_HANS, new QWeather.OnResultWarningListener() {
+        QWeather.getWarning(this, thisWeatherId, Lang.ZH_HANS, new QWeather.OnResultWarningListener() {
             @Override
             public void onError(Throwable throwable) {
             }
@@ -654,30 +803,6 @@ public class WeatherActivity extends AppCompatActivity {
                     Warnning_text.setText("暂无预警信息");
                 } else {
                     Warnning_text.setText(warnningText);
-                    Warnning_text.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View view) {
-                            QWeather.getGeoCityLookup(WeatherActivity.this, mWeatherId, Range.CN, 20, Lang.EN, new QWeather.OnResultGeoListener() {
-                                @Override
-                                public void onError(Throwable throwable) {
-
-                                }
-
-                                @Override
-                                public void onSuccess(GeoBean geoBean) {
-                                    List<GeoBean.LocationBean> locationBeanList = geoBean.getLocationBean();
-                                    if(locationBeanList.size()==1) {
-                                        String name =  locationBeanList.get(0).getName();
-                                        String mWeatherid = locationBeanList.get(0).getId();
-                                        String sonOfUri = "https://www.qweather.com/severe-weather/" + name.toLowerCase() + "-" + mWeatherid + ".html";
-                                        Uri uri = Uri.parse(sonOfUri);
-                                        Intent intent = new Intent(Intent.ACTION_VIEW, uri);
-                                        startActivity(intent);
-                                    }
-                                }
-                            });
-                        }
-                    });
                 }
             }
         });
@@ -714,6 +839,9 @@ public class WeatherActivity extends AppCompatActivity {
 
 
     public void updateWeather(){
+        //取出weather表的全部元素之后，逐个遍历，根据每个weather元素的weatherid去获取该id的城市的天气信息
+        // 将天气信息封装进一个新的weather对象，然后存入weather表中（saveOrUpdate : 没有这个id的话存入，有的话更新这个id的元素的全部信息）
+        // 当然了这里相当于只用到了update
         List<Weather> new_WeatherList = LitePal.findAll(Weather.class);
         if(new_WeatherList.size()>0){
             for (Weather weather : new_WeatherList) {
@@ -733,12 +861,257 @@ public class WeatherActivity extends AppCompatActivity {
                         weather1.saveOrUpdate("weatherId=?",meatherId);
                     }
                 });
-                //Toast.makeText(this,weather.getText(),Toast.LENGTH_SHORT).show();
             }
         }
+        //更新fragment的view显示
         ManageFragment.qureyWeather_manage();
+        //打开右侧的fragment显示常用城市界面
         drawerLayout.openDrawer(Gravity.RIGHT);
     }
 
 
+    protected String load() {
+        //读取test.json
+        StringBuilder content = new StringBuilder();
+        FileInputStream in = null;
+        BufferedReader reader = null;
+        try {
+            in = openFileInput("test.json");
+            reader = new BufferedReader(new InputStreamReader(in));
+            String line = "";
+            while ((line = reader.readLine()) != null) {
+                content.append(line);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (reader != null) {
+                    reader.close();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        return content.toString();
+    }
+
+    protected void show_YiQing(String cityName,String provinceName){
+        //显示疫情信息
+        //读出test.json中的数据显示
+        //textView.setText(load());
+        Gson gson = new Gson();
+        //将json解析对象,之后需要什么就从实例拿什么
+        TencentData tencentData = gson.fromJson(load(), TencentData.class);
+        try {
+            System.out.println(tencentData.getRet());
+        } catch (Exception e) {
+            Log.d("Error", "空指针异常了兄弟！！");
+            e.printStackTrace();
+        }
+        //TencentData tencentData对象中拿出DataDTO集合
+        TencentData.DataDTO dataDTO = tencentData.getData();
+        /*  类目录
+            TencentData
+            public static class DataDTO {
+            private Diseaseh5ShelfDTO diseaseh5Shelf;                       //DataDTO 的一个内部静态类
+            private List<LocalCityNCOVDataListDTO> localCityNCOVDataList;   //DataDTO 的一个内部静态类数组
+            */
+        TencentData.DataDTO.Diseaseh5ShelfDTO diseaseh5ShelfDTO = dataDTO.getDiseaseh5Shelf();
+        //取出LocalCityNCOVDataListDTO
+        List<TencentData.DataDTO.LocalCityNCOVDataListDTO> localCityNCOVDataListDTOS = dataDTO.getLocalCityNCOVDataList();
+        //输出list例
+        //printlocalCityNCOVDataListDTOS(localCityNCOVDataListDTOS);
+        //取出AreaTreeDTO
+        List<TencentData.DataDTO.Diseaseh5ShelfDTO.AreaTreeDTO> areaTreeDTOList = diseaseh5ShelfDTO.getAreaTree();
+        //输出例子
+        printDiseaseh5ShelfDTO(areaTreeDTOList,cityName,provinceName);
+        Log.d("System.out", "MAIN结束");
+    }
+
+
+    public void test() throws IOException {
+        //根据阿里API的curl命令来请求数据
+        //发送请求的java代码为某个在线转换工具根据curl命令转换过来的
+        //原来的curl命令为：curl -i -k --get --include 'https://ncovdata.market.alicloudapi.com/ncov/cityDiseaseInfoWithTrend'  -H 'Authorization:APPCODE 972fc105b0644a17a653153e70260dab'
+        //发送http请求不能写在主线程里，所以写在了这个子线程里  https://api.inews.qq.com/newsqa/v1/query/inner/publish/modules/list?modules=localCityNCOVDataList,diseaseh5Shelf
+        new Thread() {
+            @Override
+            public void run() {
+                URL url = null;
+                try {
+                    url = new URL("https://api.inews.qq.com/newsqa/v1/query/inner/publish/modules/list?modules=localCityNCOVDataList,diseaseh5Shelf");
+                } catch (MalformedURLException e) {
+                    e.printStackTrace();
+                }
+                HttpURLConnection http = null;
+                try {
+                    http = (HttpURLConnection) url.openConnection();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                http.setRequestProperty("Authorization", "APPCODE 972fc105b0644a17a653153e70260dab");
+                String response = null;
+                try {
+                    response = http.getResponseCode() + " " + http.getResponseMessage();
+                    int code = http.getResponseCode();
+                    // 5. 如果返回值正常，数据在网络中是以流的形式得到服务端返回的数据
+                    String msg = "";
+                    if (code == 200) { // 正常响应
+                        // 从流中读取响应信息
+                        BufferedReader reader = new BufferedReader(new InputStreamReader(http.getInputStream()));
+                        String line = null;
+                        while ((line = reader.readLine()) != null) { // 循环从流中读取
+                            msg += line + "\n";
+                        }
+                        reader.close(); // 关闭流
+                        String str = msg;
+                        System.out.println(msg);
+                        //请求得到的数据存在msg里面
+
+                        //写入内部存储files的test.json
+                        FileOutputStream fos = null;
+                        BufferedWriter writer = null;
+                        try {
+                            fos = openFileOutput("test.json", Context.MODE_PRIVATE);
+                            writer = new BufferedWriter(new OutputStreamWriter(fos));
+                            try {
+                                writer.write(str);
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        } catch (FileNotFoundException e) {
+                            e.printStackTrace();
+                        } finally {
+                            if (writer != null) {
+                                try {
+                                    writer.close();
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                            if (fos != null) {
+                                try {
+                                    fos.close();
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                        }
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                System.out.println(response);
+                http.disconnect();
+            }
+        }.start();
+
+    }
+
+
+    private void printDiseaseh5ShelfDTO(List<TencentData.DataDTO.Diseaseh5ShelfDTO.AreaTreeDTO> areaTreeDTOList,String cityName,String provinceName) {
+        //取出
+//        从嵌套数组中取出数组ChildrenDTO
+//        areaTreeDTOList里只有一个元素
+        for (TencentData.DataDTO.Diseaseh5ShelfDTO.AreaTreeDTO areaTreeDTO : areaTreeDTOList) {
+            List<TencentData.DataDTO.Diseaseh5ShelfDTO.AreaTreeDTO.ChildrenDTO> childrenDTOList = areaTreeDTO.getChildren();
+            if(provinceName.length() > 1){
+                provinceName = provinceName.substring(0,provinceName.length() - 1);
+            }
+            yiqing_confirm_add.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
+            yiqing_wz_add.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
+            yiqing_confirm.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
+            yiqing_total_confirm.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
+            yiqing_medium.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
+            yiqing_height.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
+            show_more_yiqing.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
+            show_more_yiqing.setTextColor(android.graphics.Color.rgb(255,255,255));
+            if(cityName.equals("北京")||cityName.equals("上海")||cityName.equals("重庆")||cityName.equals("天津")||cityName.equals("香港")||cityName.equals("澳门"))
+            {
+                show_more_yiqing.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        if(cityName.equals("台湾")||cityName.equals("香港")||cityName.equals("澳门")){
+                            String sonOfUri = "https://news.qq.com/zt2020/page/feiyan.htm#/?ADTAG=quanqiuyimiao";
+                            Uri uri = Uri.parse(sonOfUri);
+                            Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+                            startActivity(intent);
+                        }
+                        else{
+                            String pool = "";
+                            if(cityName.equals("北京")){
+                                pool = "bj";
+                            }
+                            else if(cityName.equals("上海")){
+                                pool = "sh";
+                            }
+                            else if(cityName.equals("重庆")){
+                                pool = "cq";
+                            }
+                            else if(cityName.equals("天津")){
+                                pool = "tj";
+                            }
+                            String sonOfUri = "https://news.qq.com/zt2020/page/feiyan.htm#/area?pool=" + pool;
+                            Uri uri = Uri.parse(sonOfUri);
+                            Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+                            startActivity(intent);
+                        }
+                    }
+                });
+
+                for (TencentData.DataDTO.Diseaseh5ShelfDTO.AreaTreeDTO.ChildrenDTO childrenDTO : childrenDTOList) {
+                    if(childrenDTO.getName().equals(cityName)) {
+                        TencentData.DataDTO.Diseaseh5ShelfDTO.AreaTreeDTO.ChildrenDTO.TodayDTO todayDTO = childrenDTO.getToday();
+                        yiqing_confirm_add.setText(todayDTO.getLocal_confirm_add()+"");
+                        yiqing_wz_add.setText(todayDTO.getWzz_add()+"");
+                        TencentData.DataDTO.Diseaseh5ShelfDTO.AreaTreeDTO.ChildrenDTO.TotalDTO totalDTO = childrenDTO.getTotal();
+                        yiqing_confirm.setText(totalDTO.getNowConfirm()+"");
+                        yiqing_total_confirm.setText(totalDTO.getConfirm()+"");
+                        yiqing_medium.setText(totalDTO.getMediumRiskAreaNum()+"");
+                        yiqing_height.setText(totalDTO.getHighRiskAreaNum()+"");
+                        break;
+                    }
+                }
+            }
+            else {
+                for (TencentData.DataDTO.Diseaseh5ShelfDTO.AreaTreeDTO.ChildrenDTO childrenDTO : childrenDTOList) {
+
+                    if(childrenDTO.getName().equals(provinceName)) {
+                        int t = 1;
+//                取出Son
+                        List<TencentData.DataDTO.Diseaseh5ShelfDTO.AreaTreeDTO.ChildrenDTO.ChildrenDTO_Son> childrenDTO_sons = childrenDTO.getChildren();
+//                输出看看Son
+                        for (TencentData.DataDTO.Diseaseh5ShelfDTO.AreaTreeDTO.ChildrenDTO.ChildrenDTO_Son childrenDTO_son : childrenDTO_sons) {
+                            if (childrenDTO_son.getName().equals(cityName)) {
+                                show_more_yiqing.setOnClickListener(new View.OnClickListener() {
+                                    @Override
+                                    public void onClick(View view) {
+                                        String sonOfUri = "https://news.qq.com/zt2020/page/feiyan.htm#/area?adcode=" + childrenDTO_son.getAdcode();
+                                        Uri uri = Uri.parse(sonOfUri);
+                                        Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+                                        startActivity(intent);
+                                    }
+                                });
+                                TencentData.DataDTO.Diseaseh5ShelfDTO.AreaTreeDTO.ChildrenDTO.ChildrenDTO_Son.TodayDTO todayDTO = childrenDTO_son.getToday();
+                                yiqing_confirm_add.setText(todayDTO.getLocal_confirm_add()+"");
+                                yiqing_wz_add.setText(todayDTO.getWzz_add()+"");
+                                TencentData.DataDTO.Diseaseh5ShelfDTO.AreaTreeDTO.ChildrenDTO.ChildrenDTO_Son.TotalDTO totalDTO = childrenDTO_son.getTotal();
+                                yiqing_confirm.setText(totalDTO.getNowConfirm()+"");
+                                yiqing_total_confirm.setText(totalDTO.getConfirm()+"");
+                                yiqing_medium.setText(totalDTO.getMediumRiskAreaNum()+"");
+                                yiqing_height.setText(totalDTO.getHighRiskAreaNum()+"");
+                                t = 2;
+                                break;
+                            }
+                        }
+                        if(t==2){
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+    }
 }

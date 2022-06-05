@@ -51,6 +51,7 @@ public class ManageFragment extends Fragment {
         titleText.setText("常用城市");
         adapter = new MangeAdapter(getActivity(),listener,
                 R.layout.manage_item, mangeList);
+        //给adapter设置一个listener，来给每个item执行特定的点击操作
         /*将MangeAdapter类型的adapter对象作为适配器（adpater）传递给ListView*/
         listView = (ListView) view.findViewById(R.id.list_view_manage);
         listView.setAdapter(adapter);
@@ -72,6 +73,7 @@ public class ManageFragment extends Fragment {
     }
 
     public static void qureyWeather_manage(){
+        //读取weather表的信息，并显示到view
         WeatherList = LitePal.findAll(Weather.class);
         //Toast.makeText(getActivity(), "the size is " + WeatherList.size(), Toast.LENGTH_SHORT).show();
         if (WeatherList.size() > 0) {
@@ -96,15 +98,16 @@ public class ManageFragment extends Fragment {
     }
 
     View.OnClickListener listener = new View.OnClickListener() {
+        //设置监听器
         @Override
         public void onClick(View view) {
             switch (view.getId()){
                 case R.id.text_manage_item:{
                     final int position = (int) view.getTag();
                     String weatherId = weaherIdDataList.get(position);
-                    ((WeatherActivity) getActivity()).show_Weather_List(weatherId);
                     //更改界面的weatherID
                     ((WeatherActivity) getActivity()).thisWeatherId = weatherId;
+                    ((WeatherActivity) getActivity()).show_Weather_List(((WeatherActivity) getActivity()).thisWeatherId);
                     ((WeatherActivity) getActivity()).drawerLayout.closeDrawer(Gravity.RIGHT);
                     //Toast.makeText(getActivity(), "the size is " + WeatherList.size(), Toast.LENGTH_SHORT).show();
                     break;

@@ -120,9 +120,9 @@ public class ChooseAreaFragment extends Fragment {
                         //已经打开weatherActivity之后再选择城市的时候，只去更新weatherActivity的界面数据而不再跳转
                         //Intent intent = new Intent();
                         //intent.putExtra("weatherId", weatherId);
-                        ((WeatherActivity) getActivity()).show_Weather_List(weatherId);
                         //更改界面的weatherID
                         ((WeatherActivity) getActivity()).thisWeatherId = weatherId;
+                        ((WeatherActivity) getActivity()).show_Weather_List(weatherId);
                         ((WeatherActivity) getActivity()).drawerLayout.closeDrawer(Gravity.LEFT);
                     }
                 }
