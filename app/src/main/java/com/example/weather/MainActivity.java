@@ -54,7 +54,8 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         checkPermission();
-        HeConfig.init("HE2205192124421095", "75901f8fc05649029011d79f8571f871");
+        //需要自己填写自己申请的和风天气的APPid与APPkey
+        HeConfig.init("", "");
         HeConfig.switchToDevService();
         overridePendingTransition(R.anim.in_from_right,
                 R.anim.out_to_left);
