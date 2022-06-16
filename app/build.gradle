@@ -74,8 +74,8 @@ dependencies {
 }
 
 MobSDK {
-    appKey "3615b5dc5d16c"
-    appSecret "d91b31a31c50a9f11c42619adf410cc7"
+    appKey ""
+    appSecret ""
     ShareSDK {
         loopShare true
         devInfo {
