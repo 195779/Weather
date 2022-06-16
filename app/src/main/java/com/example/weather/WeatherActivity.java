@@ -1,22 +1,47 @@
 package com.example.weather;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.PopupMenu;
 import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentActivity;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
+import androidx.viewpager.widget.PagerAdapter;
+import androidx.viewpager.widget.ViewPager;
+import androidx.viewpager2.widget.ViewPager2;
 
+import android.annotation.SuppressLint;
+import android.app.Activity;
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.PorterDuff;
+import android.graphics.PorterDuffXfermode;
+import android.graphics.Rect;
+import android.graphics.RectF;
 import android.graphics.Typeface;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.preference.PreferenceManager;
+import android.provider.MediaStore;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -31,10 +56,15 @@ import com.baidu.location.LocationClientOption;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.BaseRequestOptions;
 import com.bumptech.glide.request.RequestOptions;
+import com.bumptech.glide.request.target.CustomTarget;
+import com.bumptech.glide.request.target.SimpleTarget;
+import com.bumptech.glide.request.transition.Transition;
 import com.example.weather.db.Weather;
 import com.example.weather.gson.TencentData;
 import com.example.weather.util.HttpUtil;
 import com.google.gson.Gson;
+import com.kwai.opensdk.sdk.constants.KwaiPlatform;
+import com.mob.MobSDK;
 import com.qweather.sdk.bean.IndicesBean;
 import com.qweather.sdk.bean.WarningBean;
 import com.qweather.sdk.bean.air.AirNowBean;
@@ -48,10 +78,12 @@ import com.qweather.sdk.bean.weather.WeatherNowBean;
 import com.qweather.sdk.view.QWeather;
 
 import org.litepal.LitePal;
+import org.litepal.LitePalApplication;
 import org.w3c.dom.Text;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -62,8 +94,14 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
+import cn.sharesdk.framework.Platform;
+import cn.sharesdk.framework.PlatformActionListener;
+import cn.sharesdk.framework.ShareSDK;
+import cn.sharesdk.onekeyshare.OnekeyShare;
+import cn.sharesdk.wechat.friends.Wechat;
 import jp.wasabeef.glide.transformations.BlurTransformation;
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -94,6 +132,14 @@ public class WeatherActivity extends AppCompatActivity {
     private TextView pm10Text;
 
     private TextView pm25Text;
+
+    private TextView SO2Text;
+
+    private TextView NO2Text;
+
+    private TextView COText;
+
+    private TextView O3Text;
 
     private TextView qualityText;
 
@@ -134,53 +180,111 @@ public class WeatherActivity extends AppCompatActivity {
 
 
 
+    private MyPagerAdapter_new myPagerAdapter_new;
+    private ViewPager viewPager;
+    private LinearLayout viewGroup;
+    private ArrayList<View> viewArrayList = new ArrayList<>();
+
+
     public WeatherActivity() {
     }
 
 
 
+    List<String> weatherIdList = new ArrayList<>();
+    List<Weather> weatherList = new ArrayList<>();
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_weather);
+        setContentView(R.layout.test);
         overridePendingTransition(R.anim.in_from_right,
                 R.anim.out_to_left);
+        context = this;
+        manager = (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
+        viewPager = findViewById(R.id.viewPager);
+        viewGroup = findViewById(R.id.viewGroup);
+        thisWeatherId = getIntent().getStringExtra("weatherId");
+        if(!thisWeatherId.isEmpty())
+        {weatherIdList.add(thisWeatherId);}
+        weatherList = LitePal.findAll(Weather.class);
+        for(Weather weather : weatherList){
+            if(!weather.getWeatherId().equals(thisWeatherId)){
+                weatherIdList.add(weather.getWeatherId());
+            }
+        }
+        for(String weatherId : weatherIdList){
+            @SuppressLint("InflateParams") View carousel_weather = LayoutInflater.from(this).inflate(R.layout.activity_weather, null);
+            viewArrayList.add(carousel_weather);
+        }
+        //将点点的图添加到视图ViewGroup中
+        for (int i = 0; i < viewArrayList.size(); i++) {
+            ImageView imageView = new ImageView(this);
+            //设置图片的宽高 为10像素
+            imageView.setLayoutParams(new ViewGroup.LayoutParams(2, 2));
+            if (i == 0) {
+                //第一个为默认选中状态
+                imageView.setImageResource(R.drawable.img_2);
+            } else {
+                imageView.setImageResource(R.drawable.img_3);
+            }
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            params.leftMargin = 5;
+            params.rightMargin = 5;
+            viewGroup.addView(imageView, params);
+        }
+        myPagerAdapter_new = new MyPagerAdapter_new(viewArrayList);
+        //设置缓存页数
+        //viewPager.setOffscreenPageLimit(viewArrayList.size() - 1);
+        viewPager.setAdapter(myPagerAdapter_new);
+        //添加页面更改监听器
+        viewPager.addOnPageChangeListener(onPageChangeListener);
 
+        ImageView title_image = (ImageView) findViewById(R.id.title_image);
+        BaseRequestOptions optionsBlur = new RequestOptions().transform(new BlurTransformation(5, 35));
+        Glide.with(this).load(getDrawable(R.drawable.ic_home))
+                .apply(optionsBlur)
+                .into(title_image);
+        for(int i=0;i<viewArrayList.size();i++){
+            View view = viewArrayList.get(i);
+            ImageView forecast_image = (ImageView) view.findViewById(R.id.forecast_image);
+            ImageView now_image = (ImageView) view.findViewById(R.id.now_image);
+            ImageView aqi_image = (ImageView) view.findViewById(R.id.aqi_image);
+            ImageView suggestion = (ImageView) view.findViewById(R.id.suggestion_image);
+            ImageView yiqing_image = (ImageView) view.findViewById(R.id.YiQing_image);
+            //图像模糊化处理Glide
+            Glide.with(this).load(getDrawable(R.drawable.ic_home))
+                    .apply(MainActivity.optionsBlur)
+                    .into(forecast_image);
+            Glide.with(this).load(getDrawable(R.drawable.ic_home))
+                    .apply(MainActivity.optionsBlur)
+                    .into(now_image);
+            Glide.with(this).load(getDrawable(R.drawable.ic_home))
+                    .apply(MainActivity.optionsBlur)
+                    .into(suggestion);
+            Glide.with(this).load(getDrawable(R.drawable.ic_home))
+                    .apply(MainActivity.optionsBlur)
+                    .into(aqi_image);
+            Glide.with(this).load(getDrawable(R.drawable.ic_home))
+                    .apply(MainActivity.optionsBlur)
+                    .into(yiqing_image);
+        }
 
-
-
-
-        bingPicImg = (ImageView) findViewById(R.id.bing_pic_img);
-        weatherLayout = (ScrollView) findViewById(R.id.weather_layout);
-        titleCity = (TextView) findViewById(R.id.title_city);
-        degreeText = (TextView) findViewById(R.id.degree_text);
-        weatherInfoText = (TextView) findViewById(R.id.weather_info_text);
-        forecastLayout = (LinearLayout) findViewById(R.id.forecast_layout);
-        pm10Text = (TextView) findViewById(R.id.pm10_text);
-        pm25Text = (TextView) findViewById(R.id.pm25_text);
-        qualityText = (TextView) findViewById(R.id.quality_text);
-        primaryText = (TextView)findViewById(R.id.primary_text);
-        show_more_aqi = (TextView) findViewById(R.id.show_more_aqi);
-        comfortText = (TextView) findViewById(R.id.comfort_text);
-        carWashText = (TextView) findViewById(R.id.car_wash_text);
-        sportText = (TextView) findViewById(R.id.sport_text);
-        swipeRefresh = (SwipeRefreshLayout) findViewById(R.id.swipe_refresh);
-        swipeRefresh.setColorSchemeResources(R.color.colorPrimary);
-        drawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
-        navButton = (Button) findViewById(R.id.nav_button);
-        Now_weather_image = (ImageView) findViewById(R.id.Now_weather_image);
-        Warnning_text = (TextView) findViewById(R.id.Warnning_text);
         shezhi = (ImageView) findViewById(R.id.image_shezhi);
-        CityName_yiqing = (TextView) findViewById(R.id.City);
-        city_2 = (TextView)findViewById(R.id.city_2);
-        yiqing_confirm_add = (TextView)findViewById(R.id.YiQing_Head_text_confirm_add);
-        yiqing_wz_add = (TextView)findViewById(R.id.YiQing_Head_text_wz_add);
-        yiqing_confirm = (TextView)findViewById(R.id.YiQing_Head_text_confirm);
-        yiqing_height = (TextView)findViewById(R.id.YiQing_Head_text_Height);
-        yiqing_total_confirm = (TextView)findViewById(R.id.YiQing_Head_text_total_confirm);
-        yiqing_medium = (TextView) findViewById(R.id.YiQing_Head_text_Medium);
-        show_more_yiqing = (TextView) findViewById(R.id.show_more_yiqing);
-        show_more_suggestion = (TextView) findViewById(R.id.show_more_suggestion);
+        titleCity = (TextView) findViewById(R.id.title_city);
+        navButton = (Button) findViewById(R.id.nav_button);
+        drawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout_test);
+        //有问题
+        titleCity.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                //drawerLayout.openDrawer(Gravity.LEFT);
+                //点击城市名称，弹出左滑窗口选择城市
+                Intent intent = new Intent(WeatherActivity.this,ChooseArea.class);
+                startActivity(intent);
+                //drawerLayout.openDrawer(Gravity.LEFT);
+            }
+        });
+        MobSDK.submitPolicyGrantResult(true, null);
         //设置的按键
         shezhi.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -188,147 +292,8 @@ public class WeatherActivity extends AppCompatActivity {
                 showPopupMenu(shezhi);
             }
         });
-
-
-        ImageView title_image = (ImageView) findViewById(R.id.title_image);
-        ImageView forecast_image = (ImageView) findViewById(R.id.forecast_image);
-        ImageView now_image = (ImageView) findViewById(R.id.now_image);
-        ImageView aqi_image = (ImageView) findViewById(R.id.aqi_image);
-        ImageView suggestion = (ImageView)findViewById(R.id.suggestion_image);
-        ImageView yiqing_image = (ImageView)findViewById(R.id.YiQing_image);
-        //图像模糊化处理Glide
-        BaseRequestOptions optionsBlur = new RequestOptions().transform(new BlurTransformation(5, 35));
-        Glide.with(this).load(getDrawable(R.drawable.ic_home))
-                .apply(optionsBlur)
-                .into(title_image);
-        Glide.with(this).load(getDrawable(R.drawable.ic_home))
-                .apply(optionsBlur)
-                .into(forecast_image);
-        Glide.with(this).load(getDrawable(R.drawable.ic_home))
-                .apply(optionsBlur)
-                .into(now_image);
-        Glide.with(this).load(getDrawable(R.drawable.ic_home))
-                .apply(optionsBlur)
-                .into(suggestion);
-        Glide.with(this).load(getDrawable(R.drawable.ic_home))
-                .apply(optionsBlur)
-                .into(aqi_image);
-        Glide.with(this).load(getDrawable(R.drawable.ic_home))
-                .apply(optionsBlur)
-                .into(yiqing_image);
-
-        //从MainActivity转过来的时候显示天气信息
-        thisWeatherId = getIntent().getStringExtra("weatherId");
-        show_Weather_List(thisWeatherId);
-
-        titleCity.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                drawerLayout.openDrawer(Gravity.LEFT);
-                //点击城市名称，弹出左滑窗口选择城市
-            }
-        });
-
-        loadBingPic();
-        bingPicImg.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                //更新壁纸
-                loadBingPic();
-            }
-        });
-
-
-        swipeRefresh.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
-            @Override
-            public void onRefresh() {
-                //下拉界面，请求天气信息，更新天气信息
-                show_Weather_List(thisWeatherId);
-                //更新之后隐藏下拉刷新的进度条
-                swipeRefresh.setRefreshing(false);
-            }
-        });
-
-        //跳转浏览器显示更多天气信息
-        show_more_aqi.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                QWeather.getGeoCityLookup(WeatherActivity.this, thisWeatherId, Range.CN, 20, Lang.EN, new QWeather.OnResultGeoListener() {
-                    @Override
-                    public void onError(Throwable throwable) {
-
-                    }
-
-                    @Override
-                    public void onSuccess(GeoBean geoBean) {
-                        List<GeoBean.LocationBean> locationBeanList = geoBean.getLocationBean();
-                        if(locationBeanList.size()==1) {
-                            String name =  locationBeanList.get(0).getName();
-                            String mWeatherid = locationBeanList.get(0).getId();
-                            String sonOfUri = "https://www.qweather.com/air/" + name.toLowerCase() + "-" + mWeatherid + ".html";
-                            Uri uri = Uri.parse(sonOfUri);
-                            Intent intent = new Intent(Intent.ACTION_VIEW, uri);
-                            startActivity(intent);
-                        }
-                    }
-                });
-            }
-        });
-
-        //点击跳转浏览器显示更多生活建议
-        show_more_suggestion.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                QWeather.getGeoCityLookup(WeatherActivity.this, thisWeatherId, Range.CN, 20, Lang.EN, new QWeather.OnResultGeoListener() {
-                    @Override
-                    public void onError(Throwable throwable) {
-
-                    }
-
-                    @Override
-                    public void onSuccess(GeoBean geoBean) {
-                        List<GeoBean.LocationBean> locationBeanList = geoBean.getLocationBean();
-                        if(locationBeanList.size()==1) {
-                            String name =  locationBeanList.get(0).getName();
-                            String mWeatherid = locationBeanList.get(0).getId();
-                            String sonOfUri = "https://www.qweather.com/indices/" + name.toLowerCase() + "-" + mWeatherid + ".html";
-                            Uri uri = Uri.parse(sonOfUri);
-                            Intent intent = new Intent(Intent.ACTION_VIEW, uri);
-                            startActivity(intent);
-                        }
-                    }
-                });
-            }
-        });
-
-        //点击预警信息跳转浏览器显示该城市详细预警信息
-        Warnning_text.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                        QWeather.getGeoCityLookup(WeatherActivity.this, thisWeatherId, Range.CN, 20, Lang.EN, new QWeather.OnResultGeoListener() {
-                            @Override
-                            public void onError(Throwable throwable) {
-
-                            }
-
-                            @Override
-                            public void onSuccess(GeoBean geoBean) {
-                                List<GeoBean.LocationBean> locationBeanList = geoBean.getLocationBean();
-                                if (locationBeanList.size() == 1) {
-                                    String name = locationBeanList.get(0).getName();
-                                    String mWeatherid = locationBeanList.get(0).getId();
-                                    String sonOfUri = "https://www.qweather.com/severe-weather/" + name.toLowerCase() + "-" + mWeatherid + ".html";
-                                    Uri uri = Uri.parse(sonOfUri);
-                                    Intent intent = new Intent(Intent.ACTION_VIEW, uri);
-                                    startActivity(intent);
-                                }
-                            }
-                });
-            }
-        });
-
         //调用百度定位SDK的方法，获取设备当前的位置信息并根据当前位置所在城市的weatherID来更新天气显示界面
-          navButton.setOnClickListener(new View.OnClickListener() {
+        navButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 try {
@@ -365,6 +330,7 @@ public class WeatherActivity extends AppCompatActivity {
                                         show_Weather_List(weatherId);
                                         thisWeatherId = weatherId;
                                         locationClient.stop();
+                                        //intent.putExtra("weatherId", weatherId);
                                         //startActivity(intent);
                                     } else {
                                         for (int i = 0; i < locationBeanList.size(); i++) {
@@ -377,7 +343,7 @@ public class WeatherActivity extends AppCompatActivity {
                                                 show_Weather_List(weatherId);
                                                 thisWeatherId = weatherId;
                                                 locationClient.stop();
-                                                //startActivity(intent);
+                                               // startActivity(intent);
                                             }
                                         }
                                     }
@@ -396,8 +362,203 @@ public class WeatherActivity extends AppCompatActivity {
         });
 
 
+        setView(thisWeatherId,0);
+
     }
 
+
+
+    private ViewPager.OnPageChangeListener onPageChangeListener = new ViewPager.OnPageChangeListener() {
+        @Override
+        public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
+        }
+
+        @Override
+        public void onPageSelected(int position) {
+            //当新页面选中时调用此方法，position 为新选中页面的位置索引
+            //在所选页面的时候,点点图片也要发生变化
+            setImageBackground(position);
+            String weatherId = weatherIdList.get(position);
+            setView(weatherId,position);
+        }
+
+        @Override
+        public void onPageScrollStateChanged(int state) {
+
+        }
+    };
+
+    /**
+     * 改变点点点的切换效果
+     *
+     * @param selectItem 当前选中的页面索引
+     */
+    private void setImageBackground(int selectItem) {
+        for (int i = 0; i < viewArrayList.size(); i++) {
+            ImageView imageView = (ImageView) viewGroup.getChildAt(i);
+            imageView.setBackground(null);
+            if (i == selectItem) {
+                imageView.setImageResource(R.drawable.img_2);
+            } else {
+                imageView.setImageResource(R.drawable.img_3);
+            }
+        }
+    }
+
+    private void setView(String weatherId,int position){
+        View view = viewArrayList.get(position);
+        thisWeatherId = weatherId;
+        bingPicImg = (ImageView) view.findViewById(R.id.bing_pic_img);
+        weatherLayout = (ScrollView) view.findViewById(R.id.weather_layout);
+        degreeText = (TextView) view.findViewById(R.id.degree_text);
+        weatherInfoText = (TextView) view.findViewById(R.id.weather_info_text);
+        forecastLayout = (LinearLayout) view.findViewById(R.id.forecast_layout);
+        pm10Text = (TextView) view.findViewById(R.id.pm10_text);
+        pm25Text = (TextView) view.findViewById(R.id.pm25_text);
+        SO2Text = (TextView) view.findViewById(R.id.SO2_text);
+        NO2Text = (TextView) view.findViewById(R.id.NO2_text);
+        COText = (TextView) view.findViewById(R.id.CO_text);
+        O3Text = (TextView) view.findViewById(R.id.O3_text);
+        qualityText = (TextView) view.findViewById(R.id.quality_text);
+        primaryText = (TextView) view.findViewById(R.id.primary_text);
+        show_more_aqi = (TextView) view.findViewById(R.id.show_more_aqi);
+        comfortText = (TextView) view.findViewById(R.id.comfort_text);
+        carWashText = (TextView) view.findViewById(R.id.car_wash_text);
+        sportText = (TextView) view.findViewById(R.id.sport_text);
+        swipeRefresh = (SwipeRefreshLayout) view.findViewById(R.id.swipe_refresh);
+        swipeRefresh.setColorSchemeResources(R.color.colorPrimary);
+
+        Now_weather_image = (ImageView) view.findViewById(R.id.Now_weather_image);
+        Warnning_text = (TextView) view.findViewById(R.id.Warnning_text);
+
+
+
+        CityName_yiqing = (TextView) view.findViewById(R.id.City);
+        city_2 = (TextView) view.findViewById(R.id.city_2);
+        yiqing_confirm_add = (TextView) view.findViewById(R.id.YiQing_Head_text_confirm_add);
+        yiqing_wz_add = (TextView) view.findViewById(R.id.YiQing_Head_text_wz_add);
+        yiqing_confirm = (TextView) view.findViewById(R.id.YiQing_Head_text_confirm);
+        yiqing_height = (TextView) view.findViewById(R.id.YiQing_Head_text_Height);
+        yiqing_total_confirm = (TextView) view.findViewById(R.id.YiQing_Head_text_total_confirm);
+        yiqing_medium = (TextView) view.findViewById(R.id.YiQing_Head_text_Medium);
+        show_more_yiqing = (TextView) view.findViewById(R.id.show_more_yiqing);
+        show_more_suggestion = (TextView) view.findViewById(R.id.show_more_suggestion);
+
+
+
+        show_Weather_List(weatherId);
+
+
+        loadBingPic();
+        bingPicImg.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                //更新壁纸
+                loadBingPic();
+            }
+        });
+
+
+        swipeRefresh.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                //下拉界面，请求天气信息，更新天气信息
+                show_Weather_List(weatherId);
+                loadBingPic();
+                //更新之后隐藏下拉刷新的进度条
+                swipeRefresh.setRefreshing(false);
+            }
+        });
+
+        //跳转浏览器显示更多天气信息
+        show_more_aqi.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                QWeather.getGeoCityLookup(WeatherActivity.this, weatherId, Range.CN, 20, Lang.EN, new QWeather.OnResultGeoListener() {
+                    @Override
+                    public void onError(Throwable throwable) {
+
+                    }
+
+                    @Override
+                    public void onSuccess(GeoBean geoBean) {
+                        List<GeoBean.LocationBean> locationBeanList = geoBean.getLocationBean();
+                        if(locationBeanList.size()==1) {
+                            String name =  locationBeanList.get(0).getName();
+                            String mWeatherid = locationBeanList.get(0).getId();
+                            String sonOfUri = "https://www.qweather.com/air/" + name.toLowerCase() + "-" + mWeatherid + ".html";
+                            Uri uri = Uri.parse(sonOfUri);
+                            Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+                            startActivity(intent);
+                        }
+                    }
+                });
+            }
+        });
+
+        //点击跳转浏览器显示更多生活建议
+        show_more_suggestion.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                QWeather.getGeoCityLookup(WeatherActivity.this, weatherId, Range.CN, 20, Lang.EN, new QWeather.OnResultGeoListener() {
+                    @Override
+                    public void onError(Throwable throwable) {
+
+                    }
+
+                    @Override
+                    public void onSuccess(GeoBean geoBean) {
+                        List<GeoBean.LocationBean> locationBeanList = geoBean.getLocationBean();
+                        if(locationBeanList.size()==1) {
+                            String name =  locationBeanList.get(0).getName();
+                            String mWeatherid = locationBeanList.get(0).getId();
+                            String sonOfUri = "https://www.qweather.com/indices/" + name.toLowerCase() + "-" + mWeatherid + ".html";
+                            Uri uri = Uri.parse(sonOfUri);
+                            Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+                            startActivity(intent);
+                        }
+                    }
+                });
+            }
+        });
+
+        //点击预警信息跳转浏览器显示该城市详细预警信息
+        Warnning_text.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                QWeather.getGeoCityLookup(WeatherActivity.this, weatherId, Range.CN, 20, Lang.EN, new QWeather.OnResultGeoListener() {
+                    @Override
+                    public void onError(Throwable throwable) {
+
+                    }
+
+                    @Override
+                    public void onSuccess(GeoBean geoBean) {
+                        List<GeoBean.LocationBean> locationBeanList = geoBean.getLocationBean();
+                        if (locationBeanList.size() == 1) {
+                            String name = locationBeanList.get(0).getName();
+                            String mWeatherid = locationBeanList.get(0).getId();
+                            String sonOfUri = "https://www.qweather.com/severe-weather/" + name.toLowerCase() + "-" + mWeatherid + ".html";
+                            Uri uri = Uri.parse(sonOfUri);
+                            Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+                            startActivity(intent);
+                        }
+                    }
+                });
+            }
+        });
+    }
+
+
+    private Activity context;
+    ClipboardManager manager;
+    public String getCopyString(){
+        ClipData clipData = manager.getPrimaryClip();
+        if(clipData != null && clipData.getItemCount() > 0 ){
+            return clipData.getItemAt(0).getText().toString();
+        }
+        return null;
+    }
 
     //点击设置之后弹出的菜单显示
     private void showPopupMenu(View view) {
@@ -420,10 +581,38 @@ public class WeatherActivity extends AppCompatActivity {
                     weather.setWeatherId(weatherId);
                     weather.setText(text);
                     weather.saveOrUpdate("weatherid=?",weatherId);
+                    Toast.makeText(WeatherActivity.this,ccName + "已添加为常用城市",Toast.LENGTH_SHORT).show();
                 }
                 if(item.getTitle().equals("管理常用城市")){
                     //点击管理常用城市之后，更新并显示常用城市的天气情况
                     updateWeather();
+                }
+                if(item.getTitle().equals("分享")){
+                    /**
+                     * 用于一键分享
+                     */
+                    String text = titleCity.getText().toString() + "的温度为："+degreeText.getText().toString() +"\n" + "天气情况为：" +  weatherInfoText.getText().toString() + "\n预警信息为：" + Warnning_text.getText().toString() ;
+                    ClipData mClipData = ClipData.newPlainText("Label", text);
+                    manager.setPrimaryClip(mClipData);
+                    Toast.makeText(WeatherActivity.this, "天气信息已复制到剪贴板，内容为：\n"+   getCopyString(),Toast.LENGTH_LONG).show();
+                    MobSDK.submitPolicyGrantResult(true, null);
+                    final OnekeyShare oks = new OnekeyShare();
+                    // title标题，印象笔记、邮箱、信息、微信、人人网和QQ空间使用
+                    oks.setTitle("标题");
+                    // titleUrl是标题的网络链接，仅在Linked-in,QQ和QQ空间使用
+                    oks.setTitleUrl("http://sharesdk.cn");
+                    // text是分享文本，所有平台都需要这个字段
+                    oks.setText("我是分享文本");
+                    //分享网络图片，新浪微博分享网络图片需要通过审核后申请高级写入接口，否则请注释掉测试新浪微博
+                    oks.setImageUrl("http://f1.sharesdk.cn/imgs/2014/02/26/owWpLZo_638x960.jpg");
+                    // url仅在微信（包括好友和朋友圈）中使用
+                    oks.setUrl("http://sharesdk.cn");
+                    //分享回调
+                    // 启动分享
+                    oks.show(MobSDK.getContext());
+                }
+                if(item.getTitle().equals("保存图片")){
+
                 }
                 return false;
             }
@@ -747,9 +936,14 @@ public class WeatherActivity extends AppCompatActivity {
                 pm10Text.setText(nowBean.getPm10());
                 pm25Text.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
                 pm25Text.setText(nowBean.getPm2p5());
+                SO2Text.setText(nowBean.getSo2());
+                NO2Text.setText(nowBean.getNo2());
+                COText.setText(nowBean.getCo());
+                O3Text.setText(nowBean.getO3());
                 qualityText.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
                 qualityText.setText(nowBean.getCategory());
                 primaryText.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
+
                 //Toast.makeText(WeatherActivity.this,nowBean.getPrimary(),Toast.LENGTH_SHORT).show();
                 if(nowBean.getPrimary().equals("NA")){
                     primaryText.setText("无");
@@ -800,7 +994,7 @@ public class WeatherActivity extends AppCompatActivity {
                 Warnning_text.setTypeface(Typeface.defaultFromStyle(Typeface.BOLD));
                 Warnning_text.setTextColor(android.graphics.Color.rgb(255,255,255));
                 if (warnningText.isEmpty()) {
-                    Warnning_text.setText("暂无预警信息");
+                    Warnning_text.setText("暂无预警信息\n");
                 } else {
                     Warnning_text.setText(warnningText);
                 }
@@ -809,9 +1003,9 @@ public class WeatherActivity extends AppCompatActivity {
     }
 
 
-    /**
-     * 加载必应每日一图
-     */
+
+     //加载必应每日一图
+
     private void loadBingPic() {
         String requestBingPic = "http://guolin.tech/api/bing_pic";
         HttpUtil.sendOkHttpRequest(requestBingPic, new Callback() {
@@ -864,8 +1058,12 @@ public class WeatherActivity extends AppCompatActivity {
             }
         }
         //更新fragment的view显示
-        ManageFragment.qureyWeather_manage();
+        //ManageFragment manageFragment = new ManageFragment();
+       // manageFragment.qureyWeather_manage();
         //打开右侧的fragment显示常用城市界面
+        //Intent intent = new Intent(WeatherActivity.this,show_manage_activity.class);
+        //startActivity(intent);
+        ManageFragment.qureyWeather_manage();
         drawerLayout.openDrawer(Gravity.RIGHT);
     }
 
@@ -911,12 +1109,12 @@ public class WeatherActivity extends AppCompatActivity {
         }
         //TencentData tencentData对象中拿出DataDTO集合
         TencentData.DataDTO dataDTO = tencentData.getData();
-        /*  类目录
-            TencentData
-            public static class DataDTO {
-            private Diseaseh5ShelfDTO diseaseh5Shelf;                       //DataDTO 的一个内部静态类
-            private List<LocalCityNCOVDataListDTO> localCityNCOVDataList;   //DataDTO 的一个内部静态类数组
-            */
+          //类目录
+           // TencentData
+            //public static class DataDTO {
+            //private Diseaseh5ShelfDTO diseaseh5Shelf;                       //DataDTO 的一个内部静态类
+            //private List<LocalCityNCOVDataListDTO> localCityNCOVDataList;   //DataDTO 的一个内部静态类数组
+
         TencentData.DataDTO.Diseaseh5ShelfDTO diseaseh5ShelfDTO = dataDTO.getDiseaseh5Shelf();
         //取出LocalCityNCOVDataListDTO
         List<TencentData.DataDTO.LocalCityNCOVDataListDTO> localCityNCOVDataListDTOS = dataDTO.getLocalCityNCOVDataList();
@@ -1113,5 +1311,39 @@ public class WeatherActivity extends AppCompatActivity {
             }
         }
 
+    }
+
+
+
+
+}
+
+class MyPagerAdapter_new extends PagerAdapter {
+    private ArrayList<View> viewArrayList = new ArrayList<>();
+
+    public MyPagerAdapter_new(ArrayList<View> viewArrayList) {
+        this.viewArrayList = viewArrayList;
+    }
+
+    @Override
+    public int getCount() {
+        return viewArrayList.size();
+    }
+
+    @Override
+    public boolean isViewFromObject(@NonNull View view, @NonNull Object object) {
+        return view == object;
+    }
+
+    @NonNull
+    @Override
+    public Object instantiateItem(@NonNull ViewGroup container, int position) {
+        container.addView(viewArrayList.get(position),0);
+        return viewArrayList.get(position);
+    }
+
+    @Override
+    public void destroyItem(@NonNull ViewGroup container, int position, @NonNull Object object) {
+        container.removeView(viewArrayList.get(position));
     }
 }

@@ -2,6 +2,7 @@ package com.example.weather;
 
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -11,6 +12,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -32,7 +34,7 @@ import java.util.List;
 
 public class ManageFragment extends Fragment {
 
-    private TextView titleText;
+    public static LinearLayout tianJia;
     public static  MangeAdapter adapter;
     public static ListView listView;
     public static List<String> nameDataList = new ArrayList<>();
@@ -44,13 +46,19 @@ public class ManageFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.manage, container, false);
-        titleText = (TextView) view.findViewById(R.id.title_text_manage);
         //adapter = new ArrayAdapter<>(getContext(), R.layout.manage_item, nameDataList);
         //listView.setAdapter(adapter);
         //qureyWeather_manage();
-        titleText.setText("常用城市");
         adapter = new MangeAdapter(getActivity(),listener,
                 R.layout.manage_item, mangeList);
+        tianJia = (LinearLayout) view.findViewById(R.id.LinearLayout_Tianjia);
+        tianJia.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(getActivity(),ChooseArea.class);
+                startActivity(intent);
+            }
+        });
         //给adapter设置一个listener，来给每个item执行特定的点击操作
         /*将MangeAdapter类型的adapter对象作为适配器（adpater）传递给ListView*/
         listView = (ListView) view.findViewById(R.id.list_view_manage);
@@ -106,9 +114,12 @@ public class ManageFragment extends Fragment {
                     final int position = (int) view.getTag();
                     String weatherId = weaherIdDataList.get(position);
                     //更改界面的weatherID
-                    ((WeatherActivity) getActivity()).thisWeatherId = weatherId;
+                    /*((WeatherActivity) getActivity()).thisWeatherId = weatherId;
                     ((WeatherActivity) getActivity()).show_Weather_List(((WeatherActivity) getActivity()).thisWeatherId);
-                    ((WeatherActivity) getActivity()).drawerLayout.closeDrawer(Gravity.RIGHT);
+                    ((WeatherActivity) getActivity()).drawerLayout.closeDrawer(Gravity.RIGHT);*/
+                    Intent intent = new Intent(getActivity(),WeatherActivity.class).setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+                    intent.putExtra("weatherId",weatherId);
+                    startActivity(intent);
                     //Toast.makeText(getActivity(), "the size is " + WeatherList.size(), Toast.LENGTH_SHORT).show();
                     break;
                 }

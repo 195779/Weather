@@ -20,6 +20,8 @@ import com.baidu.location.BDLocation;
 import com.baidu.location.BDLocationListener;
 import com.baidu.location.LocationClient;
 import com.baidu.location.LocationClientOption;
+import com.bumptech.glide.request.BaseRequestOptions;
+import com.bumptech.glide.request.RequestOptions;
 import com.qweather.sdk.bean.base.Lang;
 import com.qweather.sdk.bean.base.Range;
 import com.qweather.sdk.bean.geo.GeoBean;
@@ -39,10 +41,13 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
+import jp.wasabeef.glide.transformations.BlurTransformation;
+
 
 public class MainActivity extends AppCompatActivity {
 
     public LocationClient locationClient = null;
+    public static  BaseRequestOptions optionsBlur;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,6 +58,7 @@ public class MainActivity extends AppCompatActivity {
         HeConfig.switchToDevService();
         overridePendingTransition(R.anim.in_from_right,
                 R.anim.out_to_left);
+        optionsBlur = new RequestOptions().transform(new BlurTransformation(5, 35));
 
         try {
             test();

@@ -6,149 +6,252 @@
     android:layout_margin="10dp"
     android:background="@android:color/transparent"
     android:orientation="vertical">
+
     <ImageView
         android:id="@+id/YiQing_image"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:scaleType="centerCrop"
         android:src="@drawable/img_1" />
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical">
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal">
+
             <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
                 android:id="@+id/City"
-                android:textSize="13sp"/>
-            <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="地区新冠肺炎疫情信息："
-                android:textColor="#fff"
+                android:textSize="14sp" />
+
+            <TextView
                 android:id="@+id/city_2"
-                android:textSize="13sp"/>
-            <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:text="地区新冠疫情信息："
+                android:textColor="#fff"
+                android:textSize="14sp" />
+
+            <TextView
                 android:id="@+id/show_more_yiqing"
-                android:text="      点击查看更多>"
-                android:textSize="13sp"/>
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="          点击查看更多>"
+                android:textSize="13sp"
+                android:textStyle="bold" />
         </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="5dp"
+            android:orientation="horizontal">
+
+            <RelativeLayout
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_centerInParent="true"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/YiQing_Head_text_confirm_add"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textColor="#fff"
+                        android:textSize="13sp"
+                        android:layout_gravity="center"
+                        android:textStyle="bold" />
+
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="新增本土确诊"
+                        android:layout_gravity="center"
+                        android:textColor="#fff"
+                        android:textSize="13sp" />
+
+                </LinearLayout>
+
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_centerInParent="true"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/YiQing_Head_text_wz_add"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textColor="#fff"
+                        android:textSize="13sp"
+                        android:layout_gravity="center"
+                        android:textStyle="bold" />
+
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="新增本土无症状"
+                        android:layout_gravity="center"
+                        android:textColor="#fff"
+                        android:textSize="13sp" />
+
+                </LinearLayout>
+            </RelativeLayout>
+        </LinearLayout>
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal">
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginLeft="15sp"
-                android:layout_gravity="end"
-                android:textColor="#fff"
-                android:textSize="13sp"
-                android:text="新增本土确诊:  "/>
-            <TextView
-                android:id="@+id/YiQing_Head_text_confirm_add"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginLeft="7sp"
-                android:layout_gravity="end"
-                android:textColor="#fff"
-                android:textSize="13sp" />
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginLeft="37sp"
-                android:layout_gravity="end"
-                android:textColor="#fff"
-                android:textSize="13sp"
-                android:text="新增本土无症状："/>
-            <TextView
-                android:id="@+id/YiQing_Head_text_wz_add"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginLeft="7sp"
-                android:layout_gravity="end"
-                android:textColor="#fff"
-                android:textSize="13sp" />
+
+            <RelativeLayout
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_centerInParent="true"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/YiQing_Head_text_confirm"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textColor="#fff"
+                        android:layout_gravity="center"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="现有本土确诊"
+                        android:layout_gravity="center"
+                        android:textColor="#fff"
+                        android:textSize="12sp" />
+                </LinearLayout>
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_centerInParent="true"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/YiQing_Head_text_total_confirm"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textColor="#fff"
+                        android:layout_gravity="center"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="累计确诊病例"
+                        android:textColor="#fff"
+                        android:layout_gravity="center"
+                        android:textSize="13sp" />
+
+
+                </LinearLayout>
+            </RelativeLayout>
         </LinearLayout>
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal">
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginLeft="15sp"
-                android:layout_gravity="end"
-                android:textColor="#fff"
-                android:textSize="12sp"
-                android:text="现有本土确诊:  "/>
-            <TextView
-                android:id="@+id/YiQing_Head_text_confirm"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginLeft="7sp"
-                android:layout_gravity="end"
-                android:textColor="#fff"
-                android:textSize="13sp" />
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginLeft="37sp"
-                android:layout_gravity="end"
-                android:textColor="#fff"
-                android:textSize="13sp"
-                android:text="累计确诊病例："/>
-            <TextView
-                android:id="@+id/YiQing_Head_text_total_confirm"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginLeft="7sp"
-                android:layout_gravity="end"
-                android:textColor="#fff"
-                android:textSize="13sp" />
-        </LinearLayout>
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginLeft="15sp"
-                android:layout_gravity="end"
-                android:textColor="#fff"
-                android:textSize="13sp"
-                android:text="现有中风险: "/>
-            <TextView
-                android:id="@+id/YiQing_Head_text_Medium"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginLeft="22sp"
-                android:layout_gravity="end"
-                android:textColor="#fff"
-                android:textSize="13sp" />
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginLeft="41sp"
-                android:layout_gravity="end"
-                android:textColor="#fff"
-                android:textSize="13sp"
-                android:text="现有高风险: "/>
-            <TextView
-                android:id="@+id/YiQing_Head_text_Height"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginLeft="22sp"
-                android:layout_gravity="end"
-                android:textColor="#fff"
-                android:textSize="13sp" />
+
+            <RelativeLayout
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_centerInParent="true"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/YiQing_Head_text_Medium"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textColor="#fff"
+                        android:layout_gravity="center"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="现有中风险"
+                        android:layout_gravity="center"
+                        android:textColor="#fff"
+                        android:textSize="13sp" />
+                </LinearLayout>
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_centerInParent="true"
+                    android:layout_gravity="center"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/YiQing_Head_text_Height"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textColor="#fff"
+                        android:layout_gravity="center"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="现有高风险"
+                        android:layout_gravity="center"
+                        android:textColor="#fff"
+                        android:textSize="13sp" />
+                </LinearLayout>
+            </RelativeLayout>
         </LinearLayout>
     </LinearLayout>
 </FrameLayout>

@@ -3,7 +3,8 @@
     android:id="@+id/title"
     android:layout_width="match_parent"
     android:layout_height="?attr/actionBarSize"
-    android:background="@android:color/transparent">
+    android:background="@android:color/transparent"
+    android:orientation="horizontal">
 
     <ImageView
         android:id="@+id/title_image"
@@ -29,13 +30,13 @@
             android:layout_alignParentLeft="true"
             android:layout_centerVertical="true"
             android:layout_marginLeft="10dp"
-            android:background="@drawable/ic_home" />
+            android:background="@mipmap/bendi" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginLeft="5dp"
-            android:text="返回本地"
+            android:text="查看本地"
             android:textSize="10sp" />
     </LinearLayout>
 
@@ -50,7 +51,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginLeft="115dp"
-            android:gravity="center_vertical"
+            android:gravity="center_horizontal"
             android:textColor="#fff"
             android:layout_weight="1"
             android:textColorHighlight="@color/black"
@@ -60,7 +61,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="center"
+            android:layout_gravity="center_horizontal"
             android:text="选择切换城市"
             android:textSize="8sp" />
     </LinearLayout>
@@ -81,13 +82,14 @@
             android:layout_alignParentLeft="true"
             android:layout_centerVertical="true"
             android:layout_marginRight="10dp"
-            android:src="@drawable/shezhi3" />
+            android:src="@mipmap/caidan" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginLeft="4dp"
-            android:text="设置"
+            android:text="更多"
             android:textSize="10sp" />
     </LinearLayout>
+
 </FrameLayout>

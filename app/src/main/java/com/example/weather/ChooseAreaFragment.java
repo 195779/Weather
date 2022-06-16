@@ -125,6 +125,12 @@ public class ChooseAreaFragment extends Fragment {
                         ((WeatherActivity) getActivity()).show_Weather_List(weatherId);
                         ((WeatherActivity) getActivity()).drawerLayout.closeDrawer(Gravity.LEFT);
                     }
+                    if(getActivity() instanceof ChooseArea){
+                        ((ChooseArea) getActivity()).drawerLayout.closeDrawer(Gravity.LEFT);
+                        Intent intent = new Intent(getActivity(),WeatherActivity.class).setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+                        intent.putExtra("weatherId",weatherId);
+                        startActivity(intent);
+                    }
                 }
                 //检验能否查询出天气数据
                 //getWether();
